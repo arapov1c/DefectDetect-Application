@@ -71,19 +71,18 @@ void kopirajDioSlike(const cv::Mat& original, cv::Mat& trenutna, int x, int y, i
 
 void onMouseClick(int event, int x, int y, int flags, void* userData) {
     cv::Mat* trenutnaSlika = static_cast<cv::Mat*>(userData);
-
     if (!trenutnaSlika) {
         std::cerr << "Greška: Nedostupna trenutna slika!" << std::endl;
         return;
     }
 
-    if (event == cv::EVENT_LBUTTONDOWN && crtanjeAktivno) {
+    if (event == cv::EVENT_MBUTTONDOWN && crtanjeAktivno) {
         prethodnaTacka = cv::Point(x, y);
-    } else if (event == cv::EVENT_MOUSEMOVE && (flags & cv::EVENT_FLAG_LBUTTON) && crtanjeAktivno) {
+    } else if (event == cv::EVENT_MOUSEMOVE && (flags & cv::EVENT_FLAG_MBUTTON) && crtanjeAktivno) {
         cv::line(*trenutnaSlika, prethodnaTacka, cv::Point(x, y), boja, velicinaMarkera);
         prethodnaTacka = cv::Point(x, y);
         cv::imshow("Glavni pregled", *trenutnaSlika);
-    } else if (event == cv::EVENT_MOUSEMOVE && (flags & cv::EVENT_FLAG_LBUTTON) && !crtanjeAktivno) { //Implementacija gumice tako što se kopira original preko
+    } else if (event == cv::EVENT_MOUSEMOVE && (flags & cv::EVENT_FLAG_MBUTTON) && !crtanjeAktivno) { //Implementacija gumice tako što se kopira original preko
         kopirajDioSlike(originalnaSlika, *trenutnaSlika, x, y, velicinaMarkera);                       //anotirane slike
         cv::imshow("Glavni pregled", *trenutnaSlika);
     }
@@ -140,7 +139,7 @@ void onMarkerClick(int markerId){
 
 void spasiPatcheve(const std::vector<cv::Mat>& slike, QWidget* window6) {
     if (slike.empty()) {
-        std::cout<<"prazno";
+        std::cout << "prazno";
         return;  // Ako je niz slika prazan, ne radimo ništa
     }
 
@@ -158,17 +157,15 @@ void spasiPatcheve(const std::vector<cv::Mat>& slike, QWidget* window6) {
 
         QString putanjaSpasene = QDir(directory).filePath(defaultFileName);
 
-        // Odabir formata za spašavanje
-        QString selectedFormat = QFileDialog::getSaveFileName(window6, "Odaberi format spašavanja", putanjaSpasene, supportedFormats.join(";;"), &selectedFilter);
-        if (selectedFormat.isEmpty()) {
-            continue;  // Ako je korisnik odabrao otkazivanje spašavanja, preskačemo trenutnu sliku
-        }
+        // Spašavanje slike u odabrani format bez dijaloga za spašavanje
+        QString selectedFormat = supportedFormats[0];  // Uzimamo prvi podržani format (BMP) bez dijaloga
+        QString selectedPath = putanjaSpasene + ".bmp";  // Dodajemo ekstenziju BMP
 
         // Spašavanje slike u odabrani format
-        cv::imwrite(selectedFormat.toStdString(), slike[i]);
+        cv::imwrite(selectedPath.toStdString(), slike[i]);
     }
-
 }
+
 
 std::vector<cv::Mat> kreirajMaske(){
     std::vector<cv::Mat> maske;
@@ -176,32 +173,32 @@ std::vector<cv::Mat> kreirajMaske(){
     cv::cvtColor(slika, hsvSlika, cv::COLOR_BGR2HSV);
 
     cv::Mat defekt1;
-    cv::inRange(hsvSlika, cv::Scalar(91, 190, 250), cv::Scalar(111, 255, 255), defekt1);
+    cv::inRange(hsvSlika, cv::Scalar(101, 199, 255), cv::Scalar(101, 199, 255), defekt1);
     maske.push_back(defekt1);
     sveSlike.push_back(defekt1);
 
     cv::Mat defekt2;
-    cv::inRange(hsvSlika, cv::Scalar(11, 180, 250), cv::Scalar(31,255,255), defekt2);
+    cv::inRange(hsvSlika, cv::Scalar(21, 186, 255), cv::Scalar(21,186,255), defekt2);
     maske.push_back(defekt2);
     sveSlike.push_back(defekt2);
 
     cv::Mat defekt3;
-    cv::inRange(hsvSlika, cv::Scalar(0, 200, 250), cv::Scalar(10,255,255), defekt3);
+    cv::inRange(hsvSlika, cv::Scalar(0, 206, 255), cv::Scalar(0,206,255), defekt3);
     maske.push_back(defekt3);
     sveSlike.push_back(defekt3);
 
     cv::Mat defekt4;
-    cv::inRange(hsvSlika, cv::Scalar(67, 250, 190), cv::Scalar(77,255,255), defekt4);
+    cv::inRange(hsvSlika, cv::Scalar(77, 255, 193), cv::Scalar(77,255,193), defekt4);
     maske.push_back(defekt4);
     sveSlike.push_back(defekt4);
 
     cv::Mat rub;
-    cv::inRange(hsvSlika, cv::Scalar(120, 170, 250), cv::Scalar(140,255,255), rub);
+    cv::inRange(hsvSlika, cv::Scalar(130, 173, 255), cv::Scalar(130,173,255), rub);
     maske.push_back(rub);
     sveSlike.push_back(rub);
 
     cv::Mat podloga;
-    cv::inRange(hsvSlika, cv::Scalar(152, 150, 250), cv::Scalar(172,255,255), podloga);
+    cv::inRange(hsvSlika, cv::Scalar(162, 153, 255), cv::Scalar(162,153,255), podloga);
     maske.push_back(podloga);
     sveSlike.push_back(podloga);
 
@@ -217,12 +214,12 @@ std::vector<cv::Mat> kreirajMaske(){
     maske.push_back(koza);
     sveSlike.push_back(koza);
 
-    std::vector<std::string> imena_prozora = {"Defekt 1", "Defekt 2", "Defekt 3", "Defekt 4", "Rub", "Podloga", "Klasa ispravno", "Koza"};
+    /*std::vector<std::string> imena_prozora = {"Defekt 1", "Defekt 2", "Defekt 3", "Defekt 4", "Rub", "Podloga", "Klasa ispravno", "Koza"};
     for (int i = 0; i < maske.size(); ++i){
         cv::namedWindow(imena_prozora[i], cv::WINDOW_NORMAL);
         cv::imshow(imena_prozora[i], maske[i]);
         cv::resizeWindow(imena_prozora[i], 800, 600);
-    }
+    }*/
     return maske;
 }
 
@@ -271,7 +268,7 @@ std::vector<std::vector<int>> kreirajPatch(std::vector<QLineEdit*> textboxes, st
             patchevi_podloga.push_back(p6);
             patchevi_ispravno.push_back(p7);
             patchevi_koza.push_back(p8);
-            cv::rectangle(slikaSaPatchevima, pravougaonik, cv::Scalar(0,0,255), 10);
+            cv::rectangle(slikaSaPatchevima, pravougaonik, cv::Scalar(0,255,0), 10);
 
             ocjene_d1.push_back(dajOcjenu(p1));
             ocjene_d2.push_back(dajOcjenu(p2));
@@ -309,7 +306,7 @@ void eksportujPatcheve(QWidget* window6){
 
     for(int i = 0; i<indeksi.size(); i++){
         int t = indeksi[i];
-        //std::cout<<t<<std::endl;
+        std::cout<<ocjene_d1[t]<<" "<<ocjene_d2[t]<<" "<<ocjene_d3[t]<<" "<<ocjene_d4[t]<< " "<<ocjene_rub[t]<<" "<<ocjene_podloga[t]<<" "<<ocjene_ispravno[t]<<" "<<ocjene_koza[t]<<std::endl;
         if(ocjene_d1[t] == trazene_ocjene[0][0] || ocjene_d1[t] == trazene_ocjene[0][1] || ocjene_d1[t] == trazene_ocjene[0][2])
             if(ocjene_d2[t] == trazene_ocjene[1][0] || ocjene_d2[t] == trazene_ocjene[1][1] || ocjene_d2[t] == trazene_ocjene[1][2])
                 if(ocjene_d3[t] == trazene_ocjene[2][0] || ocjene_d3[t] == trazene_ocjene[2][1] || ocjene_d3[t] == trazene_ocjene[2][2])
@@ -320,6 +317,7 @@ void eksportujPatcheve(QWidget* window6){
                                     if(ocjene_koza[t] == trazene_ocjene[7][0] || ocjene_koza[t] == trazene_ocjene[7][1] || ocjene_koza[t] == trazene_ocjene[7][2]){
                                         spasi.push_back(t);
                                         indeksi.erase(std::remove(indeksi.begin(), indeksi.end(), t), indeksi.end());
+                                        i--;
                                     }
     }
 
@@ -530,13 +528,43 @@ int main(int argc, char *argv[]) {
     });
 
     //BUTTON ZA OZNAKU KRAJA ANOTACIJE, KAKO BI SE MOGLE KREIRATI MASKE I PATCHEVI
+    QWidget window7;
+    window7.setWindowTitle("Kraj anotacija");
+    QVBoxLayout *layout_kraj_anotacija = new QVBoxLayout(&window7);
+    window7.setLayout(layout_kraj_anotacija);
+
     QPushButton *krajAnotacije = new QPushButton("Završi anotiranje", &window2);
     layout_alatna_traka->addWidget(krajAnotacije);
 
     std::vector<cv::Mat> maske;
 
     QObject::connect(krajAnotacije, &QPushButton::clicked, [&]() {
+        //patchevi.clear();
+        window7.show();
         maske = kreirajMaske();
+    });
+
+    QPushButton *krajPrograma = new QPushButton("Kraj sesije", &window2);
+    layout_alatna_traka->addWidget(krajPrograma);
+
+    QObject::connect(krajPrograma, &QPushButton::clicked, [&]() {
+        QWidgetList allWidgets = qApp->topLevelWidgets();
+        for (int i = 0; i < allWidgets.size(); ++i) {
+            allWidgets.at(i)->close();
+        }
+        cv::destroyAllWindows();
+    });
+
+    QPushButton *prikazMaski = new QPushButton("Prikaži maske", &window7);
+    layout_kraj_anotacija->addWidget(prikazMaski);
+
+    QObject::connect(prikazMaski, &QPushButton::clicked, [&]() {
+        std::vector<std::string> imena_prozora = {"Defekt 1", "Defekt 2", "Defekt 3", "Defekt 4", "Rub", "Podloga", "Klasa ispravno", "Koza"};
+        for (int i = 0; i < maske.size(); ++i){
+            cv::namedWindow(imena_prozora[i], cv::WINDOW_NORMAL);
+            cv::imshow(imena_prozora[i], maske[i]);
+            cv::resizeWindow(imena_prozora[i], 800, 600);
+        }
     });
 
     //PROZOR UPOZORENJE DA SU SLIKE SPAŠENE
@@ -581,15 +609,15 @@ int main(int argc, char *argv[]) {
         ocjene = kreirajPatch(textboxes, maske, &window5);
     });
 
-    QPushButton *patcheviButton = new QPushButton("Izradi patcheve", &window2);
-    layout_alatna_traka->addWidget(patcheviButton);
+    QPushButton *patcheviButton = new QPushButton("Izradi patcheve", &window7);
+    layout_kraj_anotacija->addWidget(patcheviButton);
 
     QObject::connect(patcheviButton, &QPushButton::clicked, [&]() {
         window5.show();
     });
 
-    QPushButton *patcheviExport = new QPushButton("Eksportuj patcheve", &window2);
-    layout_alatna_traka->addWidget(patcheviExport);
+    QPushButton *patcheviExport = new QPushButton("Eksportuj patcheve", &window7);
+    layout_kraj_anotacija->addWidget(patcheviExport);
 
     //PROZOR ZA EXPORT PATCHEVA
     QWidget window6;
@@ -641,8 +669,8 @@ int main(int argc, char *argv[]) {
         eksportujPatcheve(&window6);
     });
 
-    QPushButton *spasi_sliku = new QPushButton("Spasi sliku", &window2);
-    layout_alatna_traka->addWidget(spasi_sliku);
+    QPushButton *spasi_sliku = new QPushButton("Spasi sliku", &window7);
+    layout_kraj_anotacija->addWidget(spasi_sliku);
 
     QObject::connect(spasi_sliku, &QPushButton::clicked, [&]() {
         sveSlike.push_back(slika);
