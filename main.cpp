@@ -137,7 +137,7 @@ void onMarkerClick(int markerId){
     }
 }
 
-void spasiPatcheve(const std::vector<cv::Mat>& slike, QWidget* window6) {
+void spasiPatcheve(std::vector<cv::Mat>& slike, QWidget* window6) {
     if (slike.empty()) {
         std::cout << "prazno";
         return;  // Ako je niz slika prazan, ne radimo ništa
@@ -164,6 +164,7 @@ void spasiPatcheve(const std::vector<cv::Mat>& slike, QWidget* window6) {
         // Spašavanje slike u odabrani format
         cv::imwrite(selectedPath.toStdString(), slike[i]);
     }
+    slike.clear();
 }
 
 
@@ -327,6 +328,8 @@ void eksportujPatcheve(QWidget* window6){
     }
     if(!spaseniPatchevi.empty())
         spasiPatcheve(spaseniPatchevi, window6);
+
+    patchevi.clear();
 }
 
 int main(int argc, char *argv[]) {
@@ -539,7 +542,6 @@ int main(int argc, char *argv[]) {
     std::vector<cv::Mat> maske;
 
     QObject::connect(krajAnotacije, &QPushButton::clicked, [&]() {
-        //patchevi.clear();
         window7.show();
         maske = kreirajMaske();
     });
