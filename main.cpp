@@ -522,8 +522,8 @@ int main(int argc, char *argv[]) {
     window2.setLayout(layout_alatna_traka);
 
     QObject::connect(privremeniPregled, &QPushButton::pressed, [&]() {
-        cv::Mat originalna_slika = cv::imread(putanja); //prikaz originala dok je dugme pritisnuto
-        cv::imshow("Glavni pregled", originalna_slika);
+        //cv::Mat originalna_slika = cv::imread(putanja); //prikaz originala dok je dugme pritisnuto
+        cv::imshow("Glavni pregled", originalnaSlika);
     });
 
     QObject::connect(privremeniPregled, &QPushButton::released, [&]() {
@@ -557,7 +557,7 @@ int main(int argc, char *argv[]) {
     layout_brisanje_anotacija->addWidget(Da);
 
     QObject::connect(Da, &QPushButton::clicked, [&]() {
-        slika = cv::imread(putanja);
+        slika = originalnaSlika;
         cv::imshow("Glavni pregled", slika);
         window4.close();
     });
