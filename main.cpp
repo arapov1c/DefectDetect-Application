@@ -88,24 +88,64 @@ void onMouseClick(int event, int x, int y, int flags, void* userData) {
     }
 }
 
-void onButtonClick(QWidget* window, QWidget* window2) {
-    QString filePath = QFileDialog::getOpenFileName(window, "Odaberi sliku", "", "Slike (*.png *.jpg *.jpeg)");
-    putanja = filePath.toStdString();
 
-    if (!filePath.isEmpty()) {
-        // Stvaranje novog prozora za prikaz slike
-        originalnaSlika = cv::imread(putanja);
-        sveSlike.push_back(originalnaSlika);
-        slika = originalnaSlika.clone();
+void onButtonClick(QWidget* window, QWidget* window2, int odabir) {
+    if(odabir==1){
+        QString filePath = QFileDialog::getOpenFileName(window, "Odaberi sliku", "", "Slike (*.png *.jpg *.jpeg *.bmp)");
+        putanja = filePath.toStdString();
 
-        cv::namedWindow("Glavni pregled", cv::WINDOW_NORMAL);
-        cv::resizeWindow("Glavni pregled", 800, 600);
-        cv::imshow("Glavni pregled", slika);
-        cv::setMouseCallback("Glavni pregled", onMouseClick, &slika);
-
-        // Prikaz alatne trake
-        window2->show();
+        if (!filePath.isEmpty()) {
+            // Stvaranje novog prozora za prikaz slike
+            originalnaSlika = cv::imread(putanja);
+            sveSlike.push_back(originalnaSlika);
+            slika = originalnaSlika.clone();
+        }
     }
+    else if(odabir==2){
+        QString folderPath = QFileDialog::getExistingDirectory(window, "Učitaj sesiju", "");
+
+        if (!folderPath.isEmpty()) {
+            std::string baseFolder = folderPath.toStdString();
+
+            // Putanje do foldera Anotacije i Original
+            std::string folderAnotacije = baseFolder + "/Anotacija";
+            std::string folderOriginal = baseFolder + "/Original";
+
+            // Učitavanje slika iz foldera Anotacije
+            QDir dirAnotacije(QString::fromStdString(folderAnotacije));
+
+            QStringList filter;
+            filter << "*.png" << "*.jpg" << "*.jpeg" << "*.bmp";
+
+            QFileInfoList listAnotacije = dirAnotacije.entryInfoList(filter, QDir::Files);
+            for (const QFileInfo& fileInfo : listAnotacije) {
+                cv::Mat img = cv::imread(fileInfo.absoluteFilePath().toStdString());
+                if (!img.empty()) {
+                    slika = img;
+                }
+            }
+
+            // Učitavanje slika iz foldera Original
+            QDir dirOriginal(QString::fromStdString(folderOriginal));
+            QFileInfoList listOriginal = dirOriginal.entryInfoList(filter, QDir::Files);
+            for (const QFileInfo& fileInfo : listOriginal) {
+                cv::Mat img = cv::imread(fileInfo.absoluteFilePath().toStdString());
+                if (!img.empty()) {
+                    originalnaSlika = img;
+                }
+            }
+            cv::waitKey(0);
+        } else {
+            std::cerr << "Nije odabran folder." << std::endl;
+        }
+    }
+    cv::namedWindow("Glavni pregled", cv::WINDOW_NORMAL);
+    cv::resizeWindow("Glavni pregled", 800, 600);
+    cv::imshow("Glavni pregled", slika);
+    cv::setMouseCallback("Glavni pregled", onMouseClick, &slika);
+
+    // Prikaz alatne trake
+    window2->show();
 }
 
 void onMarkerClick(int markerId){
@@ -355,7 +395,13 @@ int main(int argc, char *argv[]) {
     QPushButton *button = new QPushButton("Odaberi sliku", &window);
     layout->addWidget(button);
     QObject::connect(button, &QPushButton::clicked, [&]() {
-        onButtonClick(&window, &window2);
+        onButtonClick(&window, &window2,1);
+    });
+
+    QPushButton *button2 = new QPushButton("Učitaj sesiju", &window);
+    layout->addWidget(button2);
+    QObject::connect(button2, &QPushButton::clicked, [&]() {
+        onButtonClick(&window, &window2,2);
     });
 
     //Kreiranje markera
