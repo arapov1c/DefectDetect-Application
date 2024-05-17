@@ -391,7 +391,7 @@ int main(int argc, char *argv[]) {
     QVBoxLayout *layout = new QVBoxLayout(&window);
 
     QLabel *imageLabel = new QLabel(&window);
-    QPixmap pixmap("C:/Users/Korisnik/Desktop/ETF/II ciklus/II semestar/Uvod u digitalnu obradu slike/Ispiti/UDOS Midterm 1 Lejla Arapovic/Slike markera/logo.png");
+    QPixmap pixmap(":/ikonice/logo.png");
     imageLabel->setPixmap(pixmap);
     imageLabel->setScaledContents(true);
     layout->addWidget(imageLabel);
@@ -422,7 +422,7 @@ int main(int argc, char *argv[]) {
     layout_alatna_traka->addLayout(markerLayout);
 
     QToolButton *markerButton1 = new QToolButton(&window2);
-    markerButton1->setIcon(QIcon("C:/Users/Korisnik/Desktop/ETF/II ciklus/II semestar/Uvod u digitalnu obradu slike/Ispiti/UDOS Midterm 1 Lejla Arapovic/Slike markera/1.png"));
+    markerButton1->setIcon(QIcon(":/ikonice/1.png"));
     markerButton1->setToolTip("Defekt 1");
     markerLayout->addWidget(markerButton1);
 
@@ -431,7 +431,7 @@ int main(int argc, char *argv[]) {
     });
 
     QToolButton *markerButton2 = new QToolButton(&window2);
-    markerButton2->setIcon(QIcon("C:/Users/Korisnik/Desktop/ETF/II ciklus/II semestar/Uvod u digitalnu obradu slike/Ispiti/UDOS Midterm 1 Lejla Arapovic/Slike markera/2.png"));
+    markerButton2->setIcon(QIcon(":/ikonice/2.png"));
     markerButton2->setToolTip("Defekt 2");
     markerLayout->addWidget(markerButton2);
 
@@ -440,7 +440,7 @@ int main(int argc, char *argv[]) {
     });
 
     QToolButton *markerButton3 = new QToolButton(&window2);
-    markerButton3->setIcon(QIcon("C:/Users/Korisnik/Desktop/ETF/II ciklus/II semestar/Uvod u digitalnu obradu slike/Ispiti/UDOS Midterm 1 Lejla Arapovic/Slike markera/3.png"));
+    markerButton3->setIcon(QIcon(":/ikonice/3.png"));
     markerButton3->setToolTip("Defekt 3");
     markerLayout->addWidget(markerButton3);
 
@@ -449,7 +449,7 @@ int main(int argc, char *argv[]) {
     });
 
     QToolButton *markerButton4 = new QToolButton(&window2);
-    markerButton4->setIcon(QIcon("C:/Users/Korisnik/Desktop/ETF/II ciklus/II semestar/Uvod u digitalnu obradu slike/Ispiti/UDOS Midterm 1 Lejla Arapovic/Slike markera/4.png"));
+    markerButton4->setIcon(QIcon(":/ikonice/4.png"));
     markerButton4->setToolTip("Defekt 4");
     markerLayout->addWidget(markerButton4);
 
@@ -458,7 +458,7 @@ int main(int argc, char *argv[]) {
     });
 
     QToolButton *markerButton5 = new QToolButton(&window2);
-    markerButton5->setIcon(QIcon("C:/Users/Korisnik/Desktop/ETF/II ciklus/II semestar/Uvod u digitalnu obradu slike/Ispiti/UDOS Midterm 1 Lejla Arapovic/Slike markera/5.png"));
+    markerButton5->setIcon(QIcon(":/ikonice/5.png"));
     markerButton5->setToolTip("Rub");
     markerLayout->addWidget(markerButton5);
 
@@ -467,7 +467,7 @@ int main(int argc, char *argv[]) {
     });
 
     QToolButton *markerButton6 = new QToolButton(&window2);
-    markerButton6->setIcon(QIcon("C:/Users/Korisnik/Desktop/ETF/II ciklus/II semestar/Uvod u digitalnu obradu slike/Ispiti/UDOS Midterm 1 Lejla Arapovic/Slike markera/6.png"));
+    markerButton6->setIcon(QIcon(":/ikonice/6.png"));
     markerButton6->setToolTip("Podloga");
     markerLayout->addWidget(markerButton6);
 
@@ -476,7 +476,7 @@ int main(int argc, char *argv[]) {
     });
 
     QToolButton *gumica = new QToolButton(&window2);
-    gumica->setIcon(QIcon("C:/Users/Korisnik/Desktop/ETF/II ciklus/II semestar/Uvod u digitalnu obradu slike/Ispiti/UDOS Midterm 1 Lejla Arapovic/Slike markera/7.png"));
+    gumica->setIcon(QIcon(":/ikonice/7.png"));
     gumica->setToolTip("Gumica");
     markerLayout->addWidget(gumica);
 
@@ -485,7 +485,7 @@ int main(int argc, char *argv[]) {
     });
 
     QToolButton *mis = new QToolButton(&window2);
-    mis->setIcon(QIcon("C:/Users/Korisnik/Desktop/ETF/II ciklus/II semestar/Uvod u digitalnu obradu slike/Ispiti/UDOS Midterm 1 Lejla Arapovic/Slike markera/mis.png"));
+    mis->setIcon(QIcon(":/ikonice/mis.png"));
     markerLayout->addWidget(mis);
 
     QObject::connect(mis, &QToolButton::clicked, [&]() {
@@ -500,7 +500,7 @@ int main(int argc, char *argv[]) {
     layout_debljina_markera->addWidget(label3);
 
     QToolButton *debljina1 = new QToolButton(&window2);
-    debljina1->setIcon(QIcon("C:/Users/Korisnik/Desktop/ETF/II ciklus/II semestar/Uvod u digitalnu obradu slike/Ispiti/UDOS Midterm 1 Lejla Arapovic/Slike markera/najtanji.png"));
+    debljina1->setIcon(QIcon(":/ikonice/najtanji.png"));
     debljina1->setToolTip("1");
     layout_debljina_markera->addWidget(debljina1);
 
@@ -509,7 +509,7 @@ int main(int argc, char *argv[]) {
     });
 
     QToolButton *debljina2 = new QToolButton(&window2);
-    debljina2->setIcon(QIcon("C:/Users/Korisnik/Desktop/ETF/II ciklus/II semestar/Uvod u digitalnu obradu slike/Ispiti/UDOS Midterm 1 Lejla Arapovic/Slike markera/srednji.png"));
+    debljina2->setIcon(QIcon(":/ikonice/srednji.png"));
     debljina2->setToolTip("2");
     layout_debljina_markera->addWidget(debljina2);
 
@@ -518,7 +518,7 @@ int main(int argc, char *argv[]) {
     });
 
     QToolButton *debljina3 = new QToolButton(&window2);
-    debljina3->setIcon(QIcon("C:/Users/Korisnik/Desktop/ETF/II ciklus/II semestar/Uvod u digitalnu obradu slike/Ispiti/UDOS Midterm 1 Lejla Arapovic/Slike markera/najdeblji.png"));
+    debljina3->setIcon(QIcon(":/ikonice/najdeblji.png"));
     debljina3->setToolTip("3");
     layout_debljina_markera->addWidget(debljina3);
 

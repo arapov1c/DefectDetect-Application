@@ -1,3 +1,16 @@
 <RCC>
-    <qresource prefix="/ikonice"/>
+    <qresource prefix="/ikonice">
+        <file>1.png</file>
+        <file>2.png</file>
+        <file>3.png</file>
+        <file>4.png</file>
+        <file>5.png</file>
+        <file>6.png</file>
+        <file>7.png</file>
+        <file>logo.png</file>
+        <file>mis.png</file>
+        <file>najdeblji.png</file>
+        <file>najtanji.png</file>
+        <file>srednji.png</file>
+    </qresource>
 </RCC>
