@@ -44,16 +44,22 @@ void spasiSlike(std::vector<cv::Mat>& slike, QWidget* window2, QWidget* window3)
         return;  // Ako korisnik nije odabrao glavni folder, prekidamo postupak
     }
 
+    QString rezultatiFolder = glavniFolder + "/Rezultati";
+    QDir dir(rezultatiFolder);
+    if (!dir.exists()) {
+        dir.mkpath(rezultatiFolder);
+    }
+
     for (int i = 0; i < slike.size(); i++) {
         cv::Mat& slika = slike[i];  // Referenca na sliku iz vektora
         if (!slika.empty()) {
             std::string nazivSlike = naziviSlika[i];
-            QString folderPath = glavniFolder + "/" + QString::fromStdString(naziviFoldera[i]);
+            QString folderPath = rezultatiFolder + "/" + QString::fromStdString(naziviFoldera[i]);
 
             // Provjera postojanja podfoldera
-            QDir dir(folderPath);
-            if (!dir.exists()) {
-                dir.mkpath(folderPath);  // Kreiranje podfoldera ako ne postoji
+            QDir poddir(folderPath);
+            if (!poddir.exists()) {
+                poddir.mkpath(folderPath);  // Kreiranje podfoldera ako ne postoji
             }
 
             QString putanjaSpasene = folderPath + "/" + QString::fromStdString(nazivSlike) + ".bmp";  // Spašavanje u BMP formatu
@@ -75,6 +81,7 @@ void onMouseClick(int event, int x, int y, int flags, void* userData) {
         std::cerr << "Greška: Nedostupna trenutna slika!" << std::endl;
         return;
     }
+
 
     if (event == cv::EVENT_MBUTTONDOWN && crtanjeAktivno) {
         prethodnaTacka = cv::Point(x, y);
@@ -134,7 +141,8 @@ void onButtonClick(QWidget* window, QWidget* window2, int odabir) {
                     originalnaSlika = img;
                 }
             }
-            cv::waitKey(0);
+            sveSlike.push_back(originalnaSlika);
+            //cv::waitKey(0);
         } else {
             std::cerr << "Nije odabran folder." << std::endl;
         }
@@ -291,7 +299,7 @@ std::vector<std::vector<int>> kreirajPatch(std::vector<QLineEdit*> textboxes, st
     for(int i = 0; i<=slikaSaPatchevima.cols - x; i+=sx){
         for(int j = 0; j<=slikaSaPatchevima.rows - y; j+=sy){
             cv::Rect pravougaonik(i, j, x, y);
-            patchevi.push_back(slika(pravougaonik).clone());
+            patchevi.push_back(originalnaSlika(pravougaonik).clone());
             p1 = maske[0](pravougaonik).clone();
             p2 = maske[1](pravougaonik).clone();
             p3 = maske[2](pravougaonik).clone();
@@ -347,7 +355,7 @@ void eksportujPatcheve(QWidget* window6){
 
     for(int i = 0; i<indeksi.size(); i++){
         int t = indeksi[i];
-        std::cout<<ocjene_d1[t]<<" "<<ocjene_d2[t]<<" "<<ocjene_d3[t]<<" "<<ocjene_d4[t]<< " "<<ocjene_rub[t]<<" "<<ocjene_podloga[t]<<" "<<ocjene_ispravno[t]<<" "<<ocjene_koza[t]<<std::endl;
+        //std::cout<<ocjene_d1[t]<<" "<<ocjene_d2[t]<<" "<<ocjene_d3[t]<<" "<<ocjene_d4[t]<< " "<<ocjene_rub[t]<<" "<<ocjene_podloga[t]<<" "<<ocjene_ispravno[t]<<" "<<ocjene_koza[t]<<std::endl;
         if(ocjene_d1[t] == trazene_ocjene[0][0] || ocjene_d1[t] == trazene_ocjene[0][1] || ocjene_d1[t] == trazene_ocjene[0][2])
             if(ocjene_d2[t] == trazene_ocjene[1][0] || ocjene_d2[t] == trazene_ocjene[1][1] || ocjene_d2[t] == trazene_ocjene[1][2])
                 if(ocjene_d3[t] == trazene_ocjene[2][0] || ocjene_d3[t] == trazene_ocjene[2][1] || ocjene_d3[t] == trazene_ocjene[2][2])
@@ -370,6 +378,8 @@ void eksportujPatcheve(QWidget* window6){
         spasiPatcheve(spaseniPatchevi, window6);
 
     patchevi.clear();
+    spasi.clear();
+    //spaseniPatchevi.clear();
 }
 
 int main(int argc, char *argv[]) {
@@ -557,7 +567,7 @@ int main(int argc, char *argv[]) {
     layout_brisanje_anotacija->addWidget(Da);
 
     QObject::connect(Da, &QPushButton::clicked, [&]() {
-        slika = originalnaSlika;
+        slika = originalnaSlika.clone();
         cv::imshow("Glavni pregled", slika);
         window4.close();
     });
@@ -589,6 +599,25 @@ int main(int argc, char *argv[]) {
 
     QObject::connect(krajAnotacije, &QPushButton::clicked, [&]() {
         window7.show();
+        patchevi.clear();
+        patchevi_d1.clear();
+        patchevi_d2.clear();
+        patchevi_d3.clear();
+        patchevi_d3.clear();
+        patchevi_rub.clear();
+        patchevi_podloga.clear();
+        patchevi_koza.clear();
+        ocjene_koza.clear();
+        ocjene_d1.clear();
+        ocjene_d2.clear();
+        ocjene_d3.clear();
+        ocjene_d4.clear();
+        ocjene_ispravno.clear();
+        ocjene_podloga.clear();
+        ocjene_rub.clear();
+        spasi.clear();
+        dimenzije.clear();
+        indeksi.clear();
         maske = kreirajMaske();
     });
 
@@ -715,6 +744,7 @@ int main(int argc, char *argv[]) {
 
     QObject::connect(eksport, &QPushButton::clicked, [&]() {
         eksportujPatcheve(&window6);
+        window6.close();
     });
 
     QPushButton *spasi_sliku = new QPushButton("Spasi sliku", &window7);
