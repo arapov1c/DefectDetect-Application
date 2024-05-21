@@ -13,4 +13,13 @@
         <file>najtanji.png</file>
         <file>srednji.png</file>
     </qresource>
+    <qresource prefix="/biblioteke">
+        <file>libopencv_core490.dll</file>
+        <file>libopencv_highgui490.dll</file>
+        <file>libopencv_imgcodecs490.dll</file>
+        <file>libopencv_imgproc490.dll</file>
+        <file>libopencv_features2d490.dll</file>
+        <file>libopencv_video490.dll</file>
+        <file>libopencv_videoio490.dll</file>
+    </qresource>
 </RCC>

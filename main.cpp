@@ -382,6 +382,7 @@ void eksportujPatcheve(QWidget* window6){
     //spaseniPatchevi.clear();
 }
 
+
 int main(int argc, char *argv[]) {
 
     //POČETNI PROZOR
