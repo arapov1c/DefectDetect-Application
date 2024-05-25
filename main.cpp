@@ -627,7 +627,10 @@ int main(int argc, char *argv[]) {
         spasi.clear();
         dimenzije.clear();
         indeksi.clear();
+        sveSlike.clear();
+        sveSlike.push_back(originalnaSlika);
         maske = kreirajMaske();
+        //window2.close();
     });
 
     QPushButton *krajPrograma = new QPushButton("Kraj sesije", &window2);
