@@ -14,6 +14,7 @@
 #include <QString>
 #include <QDir>
 #include <QInputDialog>
+#include <QFileInfo>
 #include<iostream>
 
 //globalne varijable koje se koriste u nekoliko funkcija, deklarisane ovako radi lakše manipulacije između funkcija
@@ -28,15 +29,17 @@ std::vector<int> indeksi;
 std::vector<int> spasi;
 std::vector<cv::Mat> sveSlike;
 std::vector<std::vector<QCheckBox*>> checkboxes;
-std::string putanja;
-std::string putanjaSpasene;
+QString putanja;
+QString putanjaSpasene;
 std::vector<int> ocjene_d1, ocjene_d2, ocjene_d3, ocjene_d4, ocjene_rub, ocjene_podloga, ocjene_ispravno, ocjene_koza;
 std::vector<cv::Mat> patchevi, patchevi_d1, patchevi_d2, patchevi_d3, patchevi_d4, patchevi_rub, patchevi_podloga, patchevi_ispravno, patchevi_koza;
-
+QString imeSlike;
 
 void spasiSlike(std::vector<cv::Mat>& slike, QWidget* window2, QWidget* window3) {
+    QFileInfo fileInfo(putanja);
+    imeSlike = fileInfo.baseName();
     std::vector<std::string> naziviFoldera = {"Original", "Maske", "Maske", "Maske", "Maske", "Maske", "Maske", "Maske", "Maske", "Anotacija"};
-    std::vector<std::string> naziviSlika = {"slika", "maska1", "maska2", "maska3", "maska4", "maska5", "maska6", "maska7", "maska8", "slika_anotirana"};
+    std::vector<std::string> naziviSlika = {imeSlike.toStdString(), "Maska 1", "Maska 2", "Maska 3", "Maska 4", "Maska 5", "Maska 6", "Maska 7", "Maska 8", "Anotacija_"+imeSlike.toStdString()};
 
     // Odabir glavnog foldera
     QString glavniFolder = QFileDialog::getExistingDirectory(window2, "Odaberi glavni direktorij za spašavanje", QDir::currentPath());
@@ -44,7 +47,7 @@ void spasiSlike(std::vector<cv::Mat>& slike, QWidget* window2, QWidget* window3)
         return;  // Ako korisnik nije odabrao glavni folder, prekidamo postupak
     }
 
-    QString rezultatiFolder = glavniFolder + "/Rezultati";
+    QString rezultatiFolder = glavniFolder + "/Rezultati_" + imeSlike;
     QDir dir(rezultatiFolder);
     if (!dir.exists()) {
         dir.mkpath(rezultatiFolder);
@@ -62,10 +65,12 @@ void spasiSlike(std::vector<cv::Mat>& slike, QWidget* window2, QWidget* window3)
                 poddir.mkpath(folderPath);  // Kreiranje podfoldera ako ne postoji
             }
 
-            QString putanjaSpasene = folderPath + "/" + QString::fromStdString(nazivSlike) + ".bmp";  // Spašavanje u BMP formatu
+            putanjaSpasene = folderPath + "/" + QString::fromStdString(nazivSlike) + ".bmp";  // Spašavanje u BMP formatu
             cv::imwrite(putanjaSpasene.toStdString(), slika);
         }
     }
+    sveSlike.clear();
+    sveSlike.push_back(originalnaSlika);
     window3->show(); //Prikaz prozora da je slika spašena
 }
 
@@ -83,13 +88,13 @@ void onMouseClick(int event, int x, int y, int flags, void* userData) {
     }
 
 
-    if (event == cv::EVENT_MBUTTONDOWN && crtanjeAktivno) {
+    if (event == (flags & cv::EVENT_FLAG_ALTKEY) && crtanjeAktivno) {
         prethodnaTacka = cv::Point(x, y);
-    } else if (event == cv::EVENT_MOUSEMOVE && (flags & cv::EVENT_FLAG_MBUTTON) && crtanjeAktivno) {
+    } else if (event == cv::EVENT_MOUSEMOVE && (flags & cv::EVENT_FLAG_ALTKEY) && crtanjeAktivno) {
         cv::line(*trenutnaSlika, prethodnaTacka, cv::Point(x, y), boja, velicinaMarkera);
         prethodnaTacka = cv::Point(x, y);
         cv::imshow("Glavni pregled", *trenutnaSlika);
-    } else if (event == cv::EVENT_MOUSEMOVE && (flags & cv::EVENT_FLAG_MBUTTON) && !crtanjeAktivno) { //Implementacija gumice tako što se kopira original preko
+    } else if (event == cv::EVENT_MOUSEMOVE && (flags & cv::EVENT_FLAG_ALTKEY) && !crtanjeAktivno) { //Implementacija gumice tako što se kopira original preko
         kopirajDioSlike(originalnaSlika, *trenutnaSlika, x, y, velicinaMarkera);                       //anotirane slike
         cv::imshow("Glavni pregled", *trenutnaSlika);
     }
@@ -99,19 +104,20 @@ void onMouseClick(int event, int x, int y, int flags, void* userData) {
 void onButtonClick(QWidget* window, QWidget* window2, int odabir) {
     if(odabir==1){
         QString filePath = QFileDialog::getOpenFileName(window, "Odaberi sliku", "", "Slike (*.png *.jpg *.jpeg *.bmp)");
-        putanja = filePath.toStdString();
+        putanja = filePath;
 
         if (!filePath.isEmpty()) {
+            sveSlike.clear();
             // Stvaranje novog prozora za prikaz slike
-            originalnaSlika = cv::imread(putanja);
+            originalnaSlika = cv::imread(putanja.toStdString());
             sveSlike.push_back(originalnaSlika);
             slika = originalnaSlika.clone();
         }
     }
     else if(odabir==2){
         QString folderPath = QFileDialog::getExistingDirectory(window, "Učitaj sesiju", "");
-
         if (!folderPath.isEmpty()) {
+            sveSlike.clear();
             std::string baseFolder = folderPath.toStdString();
 
             // Putanje do foldera Anotacije i Original
@@ -200,10 +206,12 @@ void spasiPatcheve(std::vector<cv::Mat>& slike, QWidget* window6) {
     QString selectedFilter = "BMP (*.bmp)";  // Defaultni format
 
     QString defaultFileName;
+    QFileInfo fileInfo(putanja);
+    imeSlike = fileInfo.baseName();
     for (size_t i = 0; i < slike.size(); ++i) {
-        defaultFileName = QString("Patch%1").arg(QString::number(i + 1).rightJustified(4, '0'));  // Patch0001, Patch0002, ...
+        defaultFileName = imeSlike + "_" + QString("Patch%1").arg(QString::number(i + 1).rightJustified(4, '0'));  // Patch0001, Patch0002, ...
 
-        QString putanjaSpasene = QDir(directory).filePath(defaultFileName);
+        putanjaSpasene = QDir(directory).filePath(defaultFileName);
 
         // Spašavanje slike u odabrani format bez dijaloga za spašavanje
         QString selectedFormat = supportedFormats[0];  // Uzimamo prvi podržani format (BMP) bez dijaloga
@@ -759,5 +767,6 @@ int main(int argc, char *argv[]) {
 
     window.show();
     cv::waitKey(0);
+    //sveSlike.clear();
     return app.exec();
 }
