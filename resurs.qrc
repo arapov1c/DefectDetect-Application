@@ -12,6 +12,7 @@
         <file>najdeblji.png</file>
         <file>najtanji.png</file>
         <file>srednji.png</file>
+        <file>8.png</file>
     </qresource>
     <qresource prefix="/biblioteke">
         <file>libopencv_core490.dll</file>
