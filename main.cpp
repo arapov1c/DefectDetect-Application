@@ -38,7 +38,7 @@ void spasiSlike(std::vector<cv::Mat>& slike, QWidget* window2, QWidget* window3)
     QFileInfo fileInfo(putanja);
     imeSlike = fileInfo.baseName();
     std::vector<std::string> naziviFoldera = {"Original", "Maske", "Maske", "Maske", "Maske", "Maske", "Maske", "Maske", "Maske", "Maske", "Anotacija"};
-    std::vector<std::string> naziviSlika = {imeSlike.toStdString(), "Defekt 1", "Defekt 2", "Defekt 3", "Defekt 4", "Defekt 5", "Rub", "Podloga", "Klasa ispravno", "Klasa koža", "Anotacija_"+imeSlike.toStdString()};
+    std::vector<std::string> naziviSlika = {imeSlike.toStdString(), "Defekt 1", "Defekt 2", "Defekt 3", "Defekt 4", "Defekt 5", "Rub", "Podloga", "Klasa ispravno", "Klasa koza", "Anotacija_"+imeSlike.toStdString()};
 
     // Odabir glavnog foldera
     QString glavniFolder = QFileDialog::getExistingDirectory(window2, "Odaberi glavni direktorij za spašavanje", QDir::currentPath());
@@ -398,7 +398,7 @@ void eksportujPatcheve(QWidget* window6){
     if(!spaseniPatchevi.empty())
         spasiPatcheve(spaseniPatchevi, window6);
 
-    patchevi.clear();
+    //patchevi.clear();
     spasi.clear();
     //spaseniPatchevi.clear();
 }
