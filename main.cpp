@@ -144,6 +144,7 @@ void onButtonClick(QWidget* window, QWidget* window2, int odabir) {
             for (const QFileInfo& fileInfo : listOriginal) {
                 cv::Mat img = cv::imread(fileInfo.absoluteFilePath().toStdString());
                 if (!img.empty()) {
+                    putanja = fileInfo.absoluteFilePath();
                     originalnaSlika = img;
                 }
             }
@@ -195,37 +196,45 @@ void onMarkerClick(int markerId){
     }
 }
 
-void spasiPatcheve(std::vector<cv::Mat>& slike, QWidget* window6) {
-    if (slike.empty()) {
-        std::cout << "prazno";
-        return;  // Ako je niz slika prazan, ne radimo ništa
-    }
-
+void spasiPatcheve(std::vector<std::vector<cv::Mat>>& slike, QWidget* window6, std::vector<QString> naziv) {
     QString directory = QFileDialog::getExistingDirectory(window6, "Odaberi direktorij za spašavanje", QDir::currentPath());
     if (directory.isEmpty()) {
         return;  // Ako korisnik nije odabrao direktorij, prekidamo postupak
     }
+    for (int i = 0; i<slike.size(); i++){
+        if (!slike[i].empty()) {
+            QStringList supportedFormats = {"BMP (*.bmp)", "JPEG (*.jpg *.jpeg)", "PNG (*.png)"};
+            QString selectedFilter = "BMP (*.bmp)";  // Defaultni format
 
-    QStringList supportedFormats = {"BMP (*.bmp)", "JPEG (*.jpg *.jpeg)", "PNG (*.png)"};
-    QString selectedFilter = "BMP (*.bmp)";  // Defaultni format
+            QString defaultFileName;
+            QFileInfo fileInfo(putanja);
+            imeSlike = fileInfo.baseName();
 
-    QString defaultFileName;
-    QFileInfo fileInfo(putanja);
-    imeSlike = fileInfo.baseName();
-    for (size_t i = 0; i < slike.size(); ++i) {
-        defaultFileName = imeSlike + "_" + QString("Patch%1").arg(QString::number(i + 1).rightJustified(4, '0'));  // Patch0001, Patch0002, ...
+            // Kreiramo poddirektorij za spašavanje patcheva
+            QString patchesDirectoryName = "Patchevi_" + imeSlike + "_" + naziv[i];
+            QString patchesDirectoryPath = QDir(directory).filePath(patchesDirectoryName);
 
-        putanjaSpasene = QDir(directory).filePath(defaultFileName);
+            // Kreiramo direktorij ako ne postoji
+            QDir().mkpath(patchesDirectoryPath);
 
-        // Spašavanje slike u odabrani format bez dijaloga za spašavanje
-        QString selectedFormat = supportedFormats[0];  // Uzimamo prvi podržani format (BMP) bez dijaloga
-        QString selectedPath = putanjaSpasene + ".bmp";  // Dodajemo ekstenziju BMP
+            for (size_t j = 0; j < slike[i].size(); ++j) {
+                defaultFileName = imeSlike + "_" + QString("Patch%1").arg(QString::number(j + 1).rightJustified(4, '0'));  // Patch0001, Patch0002, ...
 
-        // Spašavanje slike u odabrani format
-        cv::imwrite(selectedPath.toStdString(), slike[i]);
+                QString putanjaSpasene = QDir(patchesDirectoryPath).filePath(defaultFileName);
+
+                // Spašavanje slike u odabrani format bez dijaloga za spašavanje
+                QString selectedFormat = supportedFormats[0];  // Uzimamo prvi podržani format (BMP) bez dijaloga
+                QString selectedPath = putanjaSpasene + ".bmp";  // Dodajemo ekstenziju BMP
+
+                // Spašavanje slike u odabrani format
+                cv::imwrite(selectedPath.toStdString(), slike[i][j]);
+            }
+            //slike[i].clear();
+        }
     }
     slike.clear();
 }
+
 
 
 std::vector<cv::Mat> kreirajMaske(){
@@ -357,7 +366,7 @@ std::vector<std::vector<int>> kreirajPatch(std::vector<QLineEdit*> textboxes, st
     return ocjene;
 }
 
-void eksportujPatcheve(QWidget* window6){
+void eksportujPojedinePatcheve(QWidget* window6, QCheckBox* checkBoxDa, QCheckBox* checkBoxNe){
     std::vector<std::vector<int>> trazene_ocjene(9, std::vector<int>(3, 3));
     for (int i=0; i<9; i++){
         for (int j=0; j<3; j++){
@@ -392,15 +401,45 @@ void eksportujPatcheve(QWidget* window6){
     }
 
     std::vector<cv::Mat> spaseniPatchevi;
+    std::vector<cv::Mat> spasenaMaskaD1;
+    std::vector<cv::Mat> spasenaMaskaD2;
+    std::vector<cv::Mat> spasenaMaskaD3;
+    std::vector<cv::Mat> spasenaMaskaD4;
+    std::vector<cv::Mat> spasenaMaskaD5;
+    std::vector<cv::Mat> spasenaMaskaRub;
+    std::vector<cv::Mat> spasenaMaskaPodloga;
+    std::vector<cv::Mat> spasenaMaskaIspravno;
+    std::vector<cv::Mat> spasenaMaskaKoza;
+
+
     for (int i=0; i<spasi.size(); i++){
         spaseniPatchevi.push_back(patchevi[spasi[i]]);
+        spasenaMaskaD1.push_back(patchevi_d1[spasi[i]]);
+        spasenaMaskaD2.push_back(patchevi_d2[spasi[i]]);
+        spasenaMaskaD3.push_back(patchevi_d3[spasi[i]]);
+        spasenaMaskaD4.push_back(patchevi_d4[spasi[i]]);
+        spasenaMaskaD5.push_back(patchevi_d5[spasi[i]]);
+        spasenaMaskaRub.push_back(patchevi_rub[spasi[i]]);
+        spasenaMaskaPodloga.push_back(patchevi_podloga[spasi[i]]);
+        spasenaMaskaIspravno.push_back(patchevi_ispravno[spasi[i]]);
+        spasenaMaskaKoza.push_back(patchevi_koza[spasi[i]]);
     }
-    if(!spaseniPatchevi.empty())
-        spasiPatcheve(spaseniPatchevi, window6);
 
-    //patchevi.clear();
+    std::vector<std::vector<cv::Mat>> spaseni;
+    std::vector<QString> nazivi;
+    if (checkBoxNe && checkBoxNe->isChecked()) {
+        spaseni = {spaseniPatchevi};
+        nazivi = {"Original"};
+    } else if (checkBoxDa && checkBoxDa->isChecked()) {
+        spaseni = {spaseniPatchevi, spasenaMaskaD1, spasenaMaskaD2, spasenaMaskaD3, spasenaMaskaD4, spasenaMaskaD5,
+                   spasenaMaskaRub, spasenaMaskaPodloga, spasenaMaskaIspravno, spasenaMaskaKoza};
+        nazivi = {"Original", "Maska 1", "Maska 2", "Maska 3", "Maska 4", "Maska 5",
+                  "Maska rub", "Maska podloga", "Maska ispravno", "Maska koza"};
+    }
+
+    if(!spaseniPatchevi.empty())
+        spasiPatcheve(spaseni, window6, nazivi);
     spasi.clear();
-    //spaseniPatchevi.clear();
 }
 
 
@@ -621,10 +660,10 @@ int main(int argc, char *argv[]) {
     });
 
     //BUTTON ZA OZNAKU KRAJA ANOTACIJE, KAKO BI SE MOGLE KREIRATI MASKE I PATCHEVI
-    QWidget window7;
-    window7.setWindowTitle("Kraj anotacija");
-    QVBoxLayout *layout_kraj_anotacija = new QVBoxLayout(&window7);
-    window7.setLayout(layout_kraj_anotacija);
+    QWidget prozorKrajAnotacija;
+    prozorKrajAnotacija.setWindowTitle("Kraj anotacija");
+    QVBoxLayout *layout_kraj_anotacija = new QVBoxLayout(&prozorKrajAnotacija);
+    prozorKrajAnotacija.setLayout(layout_kraj_anotacija);
 
     QPushButton *krajAnotacije = new QPushButton("Završi anotiranje", &window2);
     layout_kraj->addWidget(krajAnotacije);
@@ -632,7 +671,7 @@ int main(int argc, char *argv[]) {
     std::vector<cv::Mat> maske;
 
     QObject::connect(krajAnotacije, &QPushButton::clicked, [&]() {
-        window7.show();
+        prozorKrajAnotacija.show();
         patchevi.clear();
         patchevi_d1.clear();
         patchevi_d2.clear();
@@ -661,7 +700,7 @@ int main(int argc, char *argv[]) {
     });
 
 
-    QPushButton *prikazMaski = new QPushButton("Prikaži maske", &window7);
+    QPushButton *prikazMaski = new QPushButton("Prikaži maske", &prozorKrajAnotacija);
     layout_kraj_anotacija->addWidget(prikazMaski);
 
     QObject::connect(prikazMaski, &QPushButton::clicked, [&]() {
@@ -683,57 +722,141 @@ int main(int argc, char *argv[]) {
     layout_spasiSlike->addWidget(label2);
 
     //PROZOR ZA UNOS DIMENZIJA PATCHA
-    QWidget window5;
-    window5.setWindowTitle("Izrada patcheva");
-    QVBoxLayout *layout_patchevi = new QVBoxLayout(&window5);
-    window5.setLayout(layout_patchevi);
+    QWidget prozorDimenzijePatcha;
+    prozorDimenzijePatcha.setWindowTitle("Izrada patcheva");
+    QVBoxLayout *layout_patchevi = new QVBoxLayout(&prozorDimenzijePatcha);
+    prozorDimenzijePatcha.setLayout(layout_patchevi);
 
     std::vector<QLineEdit*> textboxes, textboxes1;
     for (int i = 0; i < 4; ++i) {
         std::vector<QString> nazivi = {"Širina patcha", "Visina patcha", "Horizonatlni stride", "Vertikalni stride"};
         QString label_text =  nazivi[i] + ":";
-        QLabel *label = new QLabel(label_text, &window5);
+        QLabel *label = new QLabel(label_text, &prozorDimenzijePatcha);
         layout_patchevi->addWidget(label);
 
         // Kreirajte textbox za unos cijelih brojeva
-        QLineEdit *textbox = new QLineEdit(&window5);
+        QLineEdit *textbox = new QLineEdit(&prozorDimenzijePatcha);
         textbox->setValidator(new QIntValidator(textbox));
         layout_patchevi->addWidget(textbox);
 
         textboxes.push_back(textbox);
 
     }
-    QHBoxLayout *layout_patchevi2 = new QHBoxLayout(&window5);
+    QHBoxLayout *layout_patchevi2 = new QHBoxLayout(&prozorDimenzijePatcha);
     layout_patchevi->addLayout(layout_patchevi2);
-
-    QPushButton *izradiPatch = new QPushButton("Izradi patcheve", &window5);
-    layout_patchevi2->addWidget(izradiPatch);
 
     std::vector<std::vector<int>> ocjene;
 
+
+    QPushButton *izradiPatch = new QPushButton("Izradi patcheve", &prozorDimenzijePatcha);
+    layout_patchevi2->addWidget(izradiPatch);
+
+
     QObject::connect(izradiPatch, &QPushButton::clicked, [&]() {
-        ocjene = kreirajPatch(textboxes, maske, &window5);
+        ocjene = kreirajPatch(textboxes, maske, &prozorDimenzijePatcha);
     });
 
-    QPushButton *patcheviButton = new QPushButton("Izradi patcheve", &window7);
+    QPushButton *patcheviButton = new QPushButton("Izradi patcheve", &prozorKrajAnotacija);
     layout_kraj_anotacija->addWidget(patcheviButton);
 
     QObject::connect(patcheviButton, &QPushButton::clicked, [&]() {
-        window5.show();
+        prozorDimenzijePatcha.show();
     });
 
-    QPushButton *patcheviExport = new QPushButton("Eksportuj patcheve", &window7);
+    QPushButton *patcheviExport = new QPushButton("Eksportuj patcheve", &prozorKrajAnotacija);
     layout_kraj_anotacija->addWidget(patcheviExport);
 
-    //PROZOR ZA EXPORT PATCHEVA
-    QWidget window6;
-    window6.setWindowTitle("Eksport patcheva");
-    QVBoxLayout *layout_export_glavni = new QVBoxLayout(&window6);
-    window6.setLayout(layout_export_glavni);
+
+    QWidget prozorOdabirEksporta;
+    prozorOdabirEksporta.setWindowTitle("Odabir eksporta");
+    QVBoxLayout *layout_odabir_eksporta = new QVBoxLayout(&prozorOdabirEksporta);
+    prozorOdabirEksporta.setLayout(layout_odabir_eksporta);
+
+    QPushButton *eksportSvih = new QPushButton("Eksportuj sve patcheve", &prozorOdabirEksporta);
+    layout_odabir_eksporta->addWidget(eksportSvih);
+
+    QPushButton *eksportPojedinih = new QPushButton("Eksportuj odabrane patcheve", &prozorOdabirEksporta);
+    layout_odabir_eksporta->addWidget(eksportPojedinih);
+
+    //PROZOR ZA EXPORT PATCHEVA PREKO OCJENA
+    QWidget prozorOcjene;
+    prozorOcjene.setWindowTitle("Eksport patcheva");
+    QVBoxLayout *layout_export_glavni = new QVBoxLayout(&prozorOcjene);
+    prozorOcjene.setLayout(layout_export_glavni);
+
+
+
+    QCheckBox *checkBoxDa = nullptr;
+    QCheckBox *checkBoxNe = nullptr;
+
+    auto dodajEksportMaskeCheckBox = [&]() {
+        QHBoxLayout *layout = new QHBoxLayout;
+        QWidget *widget = new QWidget(&window); // Kontejner za checkbox i tekst
+        QVBoxLayout *innerLayout = new QVBoxLayout(widget); // Layout unutar kontejnera
+
+        QLabel *label = new QLabel("Eksport maski:", widget);
+        label->setAlignment(Qt::AlignLeft);
+        innerLayout->addWidget(label);
+
+        QHBoxLayout *checkboxLayout = new QHBoxLayout;
+        checkBoxDa = new QCheckBox("Da", widget);
+        checkBoxNe = new QCheckBox("Ne", widget);
+
+        checkBoxDa->setChecked(true);
+
+        QObject::connect(checkBoxDa, &QCheckBox::toggled, [checkBoxNe](bool checked){
+            if (checked) {
+                checkBoxNe->setChecked(false);
+            }
+        });
+
+        QObject::connect(checkBoxNe, &QCheckBox::toggled, [checkBoxDa](bool checked){
+            if (checked) {
+                checkBoxDa->setChecked(false);
+            }
+        });
+
+        checkboxLayout->addWidget(checkBoxDa);
+        checkboxLayout->addWidget(checkBoxNe);
+
+        innerLayout->addLayout(checkboxLayout);
+        layout->addWidget(widget);
+        layout_odabir_eksporta->addLayout(layout);
+    };
+
+    // Pozovite funkciju
+    dodajEksportMaskeCheckBox();
 
     QObject::connect(patcheviExport, &QPushButton::clicked, [&]() {
-        window6.show();
+       prozorOdabirEksporta.show();
     });
+
+    QObject::connect(eksportSvih, &QPushButton::clicked, [&]() {
+        std::vector<std::vector<cv::Mat>> spasi;
+        std::vector<QString> nazivi;
+        if (checkBoxNe && checkBoxNe->isChecked()) {
+            spasi = {patchevi};
+            nazivi = {"Original"};
+        } else if (checkBoxDa && checkBoxDa->isChecked()) {
+            spasi = {patchevi, patchevi_d1, patchevi_d2, patchevi_d3, patchevi_d4, patchevi_d5,
+                                                    patchevi_ispravno, patchevi_koza, patchevi_podloga, patchevi_rub};
+            nazivi = {"Original", "Maska 1", "Maska 2", "Maska 3", "Maska 4", "Maska 5",
+                                        "Maska ispravno", "Maska koza", "Maska podloga", "Maska rub"};
+        }
+
+        if(!patchevi.empty())
+            spasiPatcheve(spasi, &prozorOdabirEksporta, nazivi);
+
+        prozorOdabirEksporta.close();
+    });
+
+    QObject::connect(eksportPojedinih, &QPushButton::clicked, [&]() {
+        prozorOcjene.show();
+    });
+
+    /*QObject::connect(patcheviExport, &QPushButton::clicked, [&]() {
+        window6.show();
+    });*/
 
     auto dodajCheckBoxove = [&](const QString& tekst, QWidget* eksport) {
         QHBoxLayout *layout = new QHBoxLayout;
@@ -772,11 +895,12 @@ int main(int argc, char *argv[]) {
     }
 
     QObject::connect(eksport, &QPushButton::clicked, [&]() {
-        eksportujPatcheve(&window6);
-        window6.close();
+        eksportujPojedinePatcheve(&prozorOcjene, checkBoxDa, checkBoxNe);
+        prozorOcjene.close();
+        prozorOdabirEksporta.close();
     });
 
-    QPushButton *spasi_sliku = new QPushButton("Spasi sliku", &window7);
+    QPushButton *spasi_sliku = new QPushButton("Spasi sliku", &prozorKrajAnotacija);
     layout_kraj_anotacija->addWidget(spasi_sliku);
 
     QObject::connect(spasi_sliku, &QPushButton::clicked, [&]() {
