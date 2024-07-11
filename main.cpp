@@ -201,24 +201,27 @@ void spasiPatcheve(std::vector<std::vector<cv::Mat>>& slike, QWidget* window6, s
     if (directory.isEmpty()) {
         return;  // Ako korisnik nije odabrao direktorij, prekidamo postupak
     }
+
+    QFileInfo fileInfo(putanja);
+    imeSlike = fileInfo.baseName();
+    QString patchesRootDirectory = QDir(directory).filePath("Patchevi_" + imeSlike);
+    QStringList supportedFormats = {"BMP (*.bmp)", "JPEG (*.jpg *.jpeg)", "PNG (*.png)"};
+    QString selectedFilter = "BMP (*.bmp)";  // Defaultni format
+
+
+
     for (int i = 0; i<slike.size(); i++){
-        if (!slike[i].empty()) {
-            QStringList supportedFormats = {"BMP (*.bmp)", "JPEG (*.jpg *.jpeg)", "PNG (*.png)"};
-            QString selectedFilter = "BMP (*.bmp)";  // Defaultni format
-
+        if (!slike[i].empty()) {  
             QString defaultFileName;
-            QFileInfo fileInfo(putanja);
-            imeSlike = fileInfo.baseName();
-
             // Kreiramo poddirektorij za spašavanje patcheva
             QString patchesDirectoryName = "Patchevi_" + imeSlike + "_" + naziv[i];
-            QString patchesDirectoryPath = QDir(directory).filePath(patchesDirectoryName);
+            QString patchesDirectoryPath = QDir(patchesRootDirectory).filePath(patchesDirectoryName);
 
             // Kreiramo direktorij ako ne postoji
             QDir().mkpath(patchesDirectoryPath);
 
             for (size_t j = 0; j < slike[i].size(); ++j) {
-                defaultFileName = imeSlike + "_" + QString("Patch%1").arg(QString::number(j + 1).rightJustified(4, '0'));  // Patch0001, Patch0002, ...
+                defaultFileName = imeSlike + "_" + QString("Patch%1").arg(QString::number(j + 1).rightJustified(4, '0')) + "_" + naziv[i];  // Patch0001, Patch0002, ...
 
                 QString putanjaSpasene = QDir(patchesDirectoryPath).filePath(defaultFileName);
 
