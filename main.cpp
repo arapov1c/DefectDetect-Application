@@ -20,20 +20,29 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDebug>
+#include <QTabWidget>
+#include <QFormLayout>
+#include <QComboBox>
+#include <QDoubleValidator>
+
 
 //globalne varijable koje se koriste u nekoliko funkcija, deklarisane ovako radi lakše manipulacije između funkcija
 cv::Mat slika, originalnaSlika;
 cv::Scalar boja;
 cv::Point prethodnaTacka(-1, -1);
 bool crtanjeAktivno = false;
-int velicinaMarkera = 20;
+int defaultVelicinaMarkera = 20;
+int velicinaMarkera = defaultVelicinaMarkera;
 int trenutniMarker = 1;
-std::vector<int> dimenzije{4};
+std::vector<double> defaultDimenzije = {200,200,50,50};
+std::vector<double> dimenzije = defaultDimenzije;
 std::vector<int> indeksi;
 std::vector<int> spasi;
 std::vector<cv::Mat> sveSlike;
 std::vector<std::vector<QCheckBox*>> checkboxes;
-std::vector<QString> naziviUAplikaciji{10};
+std::vector<QString> defaultNaziviUAplikaciji = {"Defekt 1", "Defekt 2", "Defekt 3", "Defekt 4", "Defekt 5", "Gumica",
+                                                 "Rub", "Podloga", "Klasa ispravno", "Koza"};
+std::vector<QString> naziviUAplikaciji = defaultNaziviUAplikaciji;
 QString putanja;
 QString putanjaSpasene;
 std::vector<int> ocjene_d1, ocjene_d2, ocjene_d3, ocjene_d4, ocjene_d5, ocjene_rub, ocjene_podloga, ocjene_ispravno, ocjene_koza;
@@ -112,8 +121,7 @@ void readConfig(const QString &fileName) {
 
     file.close();
 }
-
-/*void writeConfig(const QString &fileName, const QString &username, int windowWidth, int windowHeight) {
+void writeConfig(const QString &fileName, int velicinaMarkera, const std::vector<QString> &nazivi, const std::vector<double> &dimenzije) {
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         qWarning() << "Cannot open file for writing:" << fileName;
@@ -121,12 +129,30 @@ void readConfig(const QString &fileName) {
     }
 
     QTextStream out(&file);
-    out << "username=" << username << "\n";
-    out << "windowWidth=" << windowWidth << "\n";
-    out << "windowHeight=" << windowHeight << "\n";
+
+    // Upisivanje svih vrednosti u fajl
+    out << "velicinaMarkera=" << velicinaMarkera << "\n";
+
+    // Pretpostavljamo da su dimenzije i nazivi uvek iste dužine kao u readConfig
+    out << "x=" << dimenzije[0] << "\n";
+    out << "y=" << dimenzije[1] << "\n";
+    out << "sx=" << dimenzije[2] << "\n";
+    out << "sy=" << dimenzije[3] << "\n";
+
+    out << "nazivMarkera1=" << nazivi[0] << "\n";
+    out << "nazivMarkera2=" << nazivi[1] << "\n";
+    out << "nazivMarkera3=" << nazivi[2] << "\n";
+    out << "nazivMarkera4=" << nazivi[3] << "\n";
+    out << "nazivMarkera5=" << nazivi[4] << "\n";
+    out << "nazivGumice=" << nazivi[5] << "\n";
+    out << "nazivRuba=" << nazivi[6] << "\n";
+    out << "nazivPodloge=" << nazivi[7] << "\n";
+    out << "nazivKlaseIspravno=" << nazivi[8] << "\n";
+    out << "nazivKlaseKoza=" << nazivi[9] << "\n";
 
     file.close();
-}*/
+}
+
 
 
 void spasiSlike(std::vector<cv::Mat>& slike, QWidget* window2, QWidget* window3) {
@@ -387,12 +413,6 @@ std::vector<cv::Mat> kreirajMaske(){
     maske.push_back(koza);
     sveSlike.push_back(koza);
 
-    /*std::vector<std::string> imena_prozora = {"Defekt 1", "Defekt 2", "Defekt 3", "Defekt 4", "Defekt 5", "Rub", "Podloga", "Klasa ispravno", "Koza"};
-    for (int i = 0; i < maske.size(); ++i){
-        cv::namedWindow(imena_prozora[i], cv::WINDOW_NORMAL);
-        cv::imshow(imena_prozora[i], maske[i]);
-        cv::resizeWindow(imena_prozora[i], 800, 600);
-    }*/
     return maske;
 }
 
@@ -581,6 +601,152 @@ int main(int argc, char *argv[]) {
         onButtonClick(&window, &window2,2);
     });
 
+    QWidget prozorPostavke;
+    prozorPostavke.setWindowTitle("Postavke");
+    QVBoxLayout *layout_postavke = new QVBoxLayout(&prozorPostavke);
+
+    QTabWidget *tabWidget = new QTabWidget(&prozorPostavke);
+    layout_postavke->addWidget(tabWidget);
+
+
+    // Prvi tab - Nazivi
+    QWidget *tabNazivi = new QWidget();
+    QFormLayout *naziviLayout = new QFormLayout(tabNazivi);
+    naziviLayout->addRow("Naziv Markera 1:", new QLineEdit(naziviUAplikaciji[0]));
+    naziviLayout->addRow("Naziv Markera 2:", new QLineEdit(naziviUAplikaciji[1]));
+    naziviLayout->addRow("Naziv Markera 3:", new QLineEdit(naziviUAplikaciji[2]));
+    naziviLayout->addRow("Naziv Markera 4:", new QLineEdit(naziviUAplikaciji[3]));
+    naziviLayout->addRow("Naziv Markera 5:", new QLineEdit(naziviUAplikaciji[4]));
+    naziviLayout->addRow("Naziv Gumice:", new QLineEdit(naziviUAplikaciji[5]));
+    naziviLayout->addRow("Naziv Ruba:", new QLineEdit(naziviUAplikaciji[6]));
+    naziviLayout->addRow("Naziv Podloge:", new QLineEdit(naziviUAplikaciji[7]));
+    naziviLayout->addRow("Naziv Klase Ispravno:", new QLineEdit(naziviUAplikaciji[8]));
+    naziviLayout->addRow("Naziv Klase Koža:", new QLineEdit(naziviUAplikaciji[9]));
+    tabWidget->addTab(tabNazivi, "Nazivi");
+
+    // Drugi tab - Patchevi
+    QWidget *tabPatchevi = new QWidget();
+    QFormLayout *patcheviLayout = new QFormLayout(tabPatchevi);
+
+    // Dodavanje QLineEdit sa QDoubleValidator za ograničenje unosa na float brojeve
+    QLineEdit *sirinaEdit = new QLineEdit(QString::number(dimenzije[0]));
+    QLineEdit *visinaEdit = new QLineEdit(QString::number(dimenzije[1]));
+    QLineEdit *hStrideEdit = new QLineEdit(QString::number(dimenzije[2]));
+    QLineEdit *vStrideEdit = new QLineEdit(QString::number(dimenzije[3]));
+
+    QDoubleValidator *floatValidator = new QDoubleValidator(0, 100, 2); // Minimum 0, Maximum 100, 2 decimale
+    floatValidator->setNotation(QDoubleValidator::StandardNotation);
+
+    sirinaEdit->setValidator(floatValidator);
+    visinaEdit->setValidator(floatValidator);
+    hStrideEdit->setValidator(floatValidator);
+    vStrideEdit->setValidator(floatValidator);
+
+    patcheviLayout->addRow("Širina:", sirinaEdit);
+    patcheviLayout->addRow("Visina:", visinaEdit);
+    patcheviLayout->addRow("Horizontalni stride:", hStrideEdit);
+    patcheviLayout->addRow("Vertikalni stride:", vStrideEdit);
+
+    tabWidget->addTab(tabPatchevi, "Patchevi");
+
+    // Treći tab - Ostalo
+    QWidget *tabOstalo = new QWidget();
+    QFormLayout *ostaloLayout = new QFormLayout(tabOstalo);
+
+    // Dodavanje dropdown menija za odabir debljine markera
+    QComboBox *markerThicknessComboBox = new QComboBox();
+    for (int i = 10; i <= 70; i += 5) {
+        markerThicknessComboBox->addItem(QString::number(i));
+    }
+
+    markerThicknessComboBox->setCurrentText(QString::number(velicinaMarkera));
+
+    ostaloLayout->addRow("Debljina Markera:", markerThicknessComboBox);
+    tabWidget->addTab(tabOstalo, "Ostalo");
+
+    // Dodavanje donjeg layout-a za dugmad
+    QHBoxLayout *bottomLayout = new QHBoxLayout();
+
+
+
+    // Dugme "Default" u donjem levom uglu
+    QPushButton *defaultButton = new QPushButton("Default");
+    bottomLayout->addWidget(defaultButton, 0, Qt::AlignLeft);
+
+    bottomLayout->addStretch();
+
+    // Dugme "Spasi" u donjem desnom uglu
+    QPushButton *spasiButton = new QPushButton("Spasi");
+    bottomLayout->addWidget(spasiButton, 0, Qt::AlignRight);
+
+    // Povezivanje signala sa slotovima (ovde ćeš dodati šta treba da se desi)
+    QObject::connect(spasiButton, &QPushButton::clicked, [&]() {
+        // Prikupljanje vrednosti iz tabova i ažuriranje varijabli
+        velicinaMarkera = markerThicknessComboBox->currentText().toInt();
+
+        // Ažuriranje naziva markera
+        naziviUAplikaciji[0] = naziviLayout->itemAt(0, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[1] = naziviLayout->itemAt(1, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[2] = naziviLayout->itemAt(2, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[3] = naziviLayout->itemAt(3, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[4] = naziviLayout->itemAt(4, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[5] = naziviLayout->itemAt(5, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[6] = naziviLayout->itemAt(6, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[7] = naziviLayout->itemAt(7, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[8] = naziviLayout->itemAt(8, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[9] = naziviLayout->itemAt(9, QFormLayout::FieldRole)->widget()->property("text").toString();
+
+        // Ažuriranje dimenzija
+        dimenzije[0] = sirinaEdit->text().toDouble();
+        dimenzije[1] = visinaEdit->text().toDouble();
+        dimenzije[2] = hStrideEdit->text().toDouble();
+        dimenzije[3] = vStrideEdit->text().toDouble();
+
+        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije);
+    });
+
+
+    QObject::connect(defaultButton, &QPushButton::clicked, [&]() {
+        dimenzije = defaultDimenzije;
+        velicinaMarkera = defaultVelicinaMarkera;
+        naziviUAplikaciji = defaultNaziviUAplikaciji;
+        // Ažuriranje QLineEdit-ova u tabu "Patchevi"
+        sirinaEdit->setText(QString::number(defaultDimenzije[0]));
+        visinaEdit->setText(QString::number(defaultDimenzije[1]));
+        hStrideEdit->setText(QString::number(defaultDimenzije[2]));
+        vStrideEdit->setText(QString::number(defaultDimenzije[3]));
+
+        // Ažuriranje QLineEdit-ova u tabu "Nazivi"
+        naziviLayout->itemAt(0, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[0]);
+        naziviLayout->itemAt(1, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[1]);
+        naziviLayout->itemAt(2, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[2]);
+        naziviLayout->itemAt(3, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[3]);
+        naziviLayout->itemAt(4, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[4]);
+        naziviLayout->itemAt(5, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[5]);
+        naziviLayout->itemAt(6, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[6]);
+        naziviLayout->itemAt(7, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[7]);
+        naziviLayout->itemAt(8, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[8]);
+        naziviLayout->itemAt(9, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[9]);
+
+        // Ažuriranje QComboBox-a u tabu "Ostalo"
+        markerThicknessComboBox->setCurrentText(QString::number(defaultVelicinaMarkera));
+
+        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije);
+    });
+
+    // Dodavanje donjeg layout-a u glavni layout prozora
+    layout_postavke->addLayout(bottomLayout);
+
+    // Dodaj QTabWidget u layout prozora za postavke
+
+
+
+    QPushButton *postavke = new QPushButton("Postavke", &window);
+    layout->addWidget(postavke);
+    QObject::connect(postavke, &QPushButton::clicked, [&]() {
+        prozorPostavke.show();
+    });
+
     QHBoxLayout *markerLayout = new QHBoxLayout;
     layout_alatna_traka->addLayout(markerLayout);
 
@@ -683,6 +849,8 @@ int main(int argc, char *argv[]) {
 
     QObject::connect(debljina1, &QToolButton::clicked, [&]() {
         velicinaMarkera = 10;
+        markerThicknessComboBox->setCurrentText(QString::number(velicinaMarkera));
+        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije);
     });
 
     QToolButton *debljina2 = new QToolButton(&window2);
@@ -692,6 +860,8 @@ int main(int argc, char *argv[]) {
 
     QObject::connect(debljina2, &QToolButton::clicked, [&]() {
         velicinaMarkera = 20;
+        markerThicknessComboBox->setCurrentText(QString::number(velicinaMarkera));
+        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije);
     });
 
     QToolButton *debljina3 = new QToolButton(&window2);
@@ -701,6 +871,8 @@ int main(int argc, char *argv[]) {
 
     QObject::connect(debljina3, &QToolButton::clicked, [&]() {
         velicinaMarkera = 30;
+        markerThicknessComboBox->setCurrentText(QString::number(velicinaMarkera));
+        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije);
     });
 
     QHBoxLayout *layout_kraj = new QHBoxLayout;
