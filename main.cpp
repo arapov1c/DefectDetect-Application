@@ -562,6 +562,22 @@ void eksportujPojedinePatcheve(QWidget* window6, QCheckBox* checkBoxDa, QCheckBo
         spasiPatcheve(spaseni, window6, nazivi);
     spasi.clear();
 }
+void updateUI(QToolButton *markerButton1, QToolButton *markerButton2, QToolButton *markerButton3, QToolButton *markerButton4,
+              QToolButton *markerButton8, QToolButton *markerButton5, QToolButton *markerButton6, QToolButton *gumica,
+              std::vector<QLineEdit*> textboxes) {
+    markerButton1->setToolTip(naziviUAplikaciji[0]);
+    markerButton2->setToolTip(naziviUAplikaciji[1]);
+    markerButton3->setToolTip(naziviUAplikaciji[2]);
+    markerButton4->setToolTip(naziviUAplikaciji[3]);
+    markerButton8->setToolTip(naziviUAplikaciji[4]);
+    markerButton5->setText(naziviUAplikaciji[6]);
+    markerButton6->setText(naziviUAplikaciji[7]);
+    gumica->setText(naziviUAplikaciji[5]);
+    textboxes[0]->setText(QString::number(dimenzije[0]));
+    textboxes[1]->setText(QString::number(dimenzije[1]));
+    textboxes[2]->setText(QString::number(dimenzije[2]));
+    textboxes[3]->setText(QString::number(dimenzije[3]));
+}
 
 
 int main(int argc, char *argv[]) {
@@ -601,6 +617,90 @@ int main(int argc, char *argv[]) {
         onButtonClick(&window, &window2,2);
     });
 
+    QHBoxLayout *markerLayout = new QHBoxLayout;
+    layout_alatna_traka->addLayout(markerLayout);
+
+    QToolButton *markerButton1 = new QToolButton(&window2);
+    markerButton1->setIcon(QIcon(":/ikonice/1.png"));
+    markerButton1->setToolTip(naziviUAplikaciji[0]);
+    //markerButton1->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    markerLayout->addWidget(markerButton1);
+
+    QObject::connect(markerButton1, &QToolButton::clicked, [&]() {
+        onMarkerClick(1);
+    });
+
+    QToolButton *markerButton2 = new QToolButton(&window2);
+    markerButton2->setIcon(QIcon(":/ikonice/2.png"));
+    markerButton2->setToolTip(naziviUAplikaciji[1]);
+    //markerButton2->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    markerLayout->addWidget(markerButton2);
+
+    QObject::connect(markerButton2, &QToolButton::clicked, [&]() {
+        onMarkerClick(2);
+    });
+
+    QToolButton *markerButton3 = new QToolButton(&window2);
+    markerButton3->setIcon(QIcon(":/ikonice/3.png"));
+    markerButton3->setToolTip(naziviUAplikaciji[2]);
+    //markerButton3->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    markerLayout->addWidget(markerButton3);
+
+    QObject::connect(markerButton3, &QToolButton::clicked, [&]() {
+        onMarkerClick(3);
+    });
+
+    QToolButton *markerButton4 = new QToolButton(&window2);
+    markerButton4->setIcon(QIcon(":/ikonice/4.png"));
+    markerButton4->setToolTip(naziviUAplikaciji[3]);
+    //markerButton4->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    markerLayout->addWidget(markerButton4);
+
+    QObject::connect(markerButton4, &QToolButton::clicked, [&]() {
+        onMarkerClick(4);
+    });
+
+    QToolButton *markerButton8 = new QToolButton(&window2);
+    markerButton8->setIcon(QIcon(":/ikonice/8.png"));
+    markerButton8->setToolTip(naziviUAplikaciji[4]);
+    //markerButton8->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    markerLayout->addWidget(markerButton8);
+
+    QObject::connect(markerButton8, &QToolButton::clicked, [&]() {
+        onMarkerClick(8);
+    });
+
+    QToolButton *markerButton5 = new QToolButton(&window2);
+    markerButton5->setIcon(QIcon(":/ikonice/5.png"));
+    markerButton5->setText(naziviUAplikaciji[6]);
+    markerButton5->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    markerLayout->addWidget(markerButton5);
+
+    QObject::connect(markerButton5, &QToolButton::clicked, [&]() {
+        onMarkerClick(5);
+    });
+
+    QToolButton *markerButton6 = new QToolButton(&window2);
+    markerButton6->setIcon(QIcon(":/ikonice/6.png"));
+    markerButton6->setText(naziviUAplikaciji[7]);
+    markerButton6->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    markerLayout->addWidget(markerButton6);
+
+    QObject::connect(markerButton6, &QToolButton::clicked, [&]() {
+        onMarkerClick(6);
+    });
+
+    QToolButton *gumica = new QToolButton(&window2);
+    gumica->setIcon(QIcon(":/ikonice/7.png"));
+    gumica->setText(naziviUAplikaciji[5]);
+    gumica->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    markerLayout->addWidget(gumica);
+
+    QObject::connect(gumica, &QToolButton::clicked, [&]() {
+        onMarkerClick(7);
+    });
+
+    //POSTAVKE
     QWidget prozorPostavke;
     prozorPostavke.setWindowTitle("Postavke");
     QVBoxLayout *layout_postavke = new QVBoxLayout(&prozorPostavke);
@@ -661,183 +761,6 @@ int main(int argc, char *argv[]) {
 
     markerThicknessComboBox->setCurrentText(QString::number(velicinaMarkera));
 
-    ostaloLayout->addRow("Debljina Markera:", markerThicknessComboBox);
-    tabWidget->addTab(tabOstalo, "Ostalo");
-
-    // Dodavanje donjeg layout-a za dugmad
-    QHBoxLayout *bottomLayout = new QHBoxLayout();
-
-
-
-    // Dugme "Default" u donjem levom uglu
-    QPushButton *defaultButton = new QPushButton("Default");
-    bottomLayout->addWidget(defaultButton, 0, Qt::AlignLeft);
-
-    bottomLayout->addStretch();
-
-    // Dugme "Spasi" u donjem desnom uglu
-    QPushButton *spasiButton = new QPushButton("Spasi");
-    bottomLayout->addWidget(spasiButton, 0, Qt::AlignRight);
-
-    // Povezivanje signala sa slotovima (ovde ćeš dodati šta treba da se desi)
-    QObject::connect(spasiButton, &QPushButton::clicked, [&]() {
-        // Prikupljanje vrednosti iz tabova i ažuriranje varijabli
-        velicinaMarkera = markerThicknessComboBox->currentText().toInt();
-
-        // Ažuriranje naziva markera
-        naziviUAplikaciji[0] = naziviLayout->itemAt(0, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[1] = naziviLayout->itemAt(1, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[2] = naziviLayout->itemAt(2, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[3] = naziviLayout->itemAt(3, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[4] = naziviLayout->itemAt(4, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[5] = naziviLayout->itemAt(5, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[6] = naziviLayout->itemAt(6, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[7] = naziviLayout->itemAt(7, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[8] = naziviLayout->itemAt(8, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[9] = naziviLayout->itemAt(9, QFormLayout::FieldRole)->widget()->property("text").toString();
-
-        // Ažuriranje dimenzija
-        dimenzije[0] = sirinaEdit->text().toDouble();
-        dimenzije[1] = visinaEdit->text().toDouble();
-        dimenzije[2] = hStrideEdit->text().toDouble();
-        dimenzije[3] = vStrideEdit->text().toDouble();
-
-        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije);
-    });
-
-
-    QObject::connect(defaultButton, &QPushButton::clicked, [&]() {
-        dimenzije = defaultDimenzije;
-        velicinaMarkera = defaultVelicinaMarkera;
-        naziviUAplikaciji = defaultNaziviUAplikaciji;
-        // Ažuriranje QLineEdit-ova u tabu "Patchevi"
-        sirinaEdit->setText(QString::number(defaultDimenzije[0]));
-        visinaEdit->setText(QString::number(defaultDimenzije[1]));
-        hStrideEdit->setText(QString::number(defaultDimenzije[2]));
-        vStrideEdit->setText(QString::number(defaultDimenzije[3]));
-
-        // Ažuriranje QLineEdit-ova u tabu "Nazivi"
-        naziviLayout->itemAt(0, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[0]);
-        naziviLayout->itemAt(1, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[1]);
-        naziviLayout->itemAt(2, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[2]);
-        naziviLayout->itemAt(3, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[3]);
-        naziviLayout->itemAt(4, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[4]);
-        naziviLayout->itemAt(5, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[5]);
-        naziviLayout->itemAt(6, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[6]);
-        naziviLayout->itemAt(7, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[7]);
-        naziviLayout->itemAt(8, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[8]);
-        naziviLayout->itemAt(9, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[9]);
-
-        // Ažuriranje QComboBox-a u tabu "Ostalo"
-        markerThicknessComboBox->setCurrentText(QString::number(defaultVelicinaMarkera));
-
-        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije);
-    });
-
-    // Dodavanje donjeg layout-a u glavni layout prozora
-    layout_postavke->addLayout(bottomLayout);
-
-    // Dodaj QTabWidget u layout prozora za postavke
-
-
-
-    QPushButton *postavke = new QPushButton("Postavke", &window);
-    layout->addWidget(postavke);
-    QObject::connect(postavke, &QPushButton::clicked, [&]() {
-        prozorPostavke.show();
-    });
-
-    QHBoxLayout *markerLayout = new QHBoxLayout;
-    layout_alatna_traka->addLayout(markerLayout);
-
-    QToolButton *markerButton1 = new QToolButton(&window2);
-    markerButton1->setIcon(QIcon(":/ikonice/1.png"));
-    markerButton1->setToolTip(naziviUAplikaciji[0]);
-    //markerButton1->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    markerLayout->addWidget(markerButton1);
-
-    QObject::connect(markerButton1, &QToolButton::clicked, [&]() {
-        onMarkerClick(1);
-    });
-
-    QToolButton *markerButton2 = new QToolButton(&window2);
-    markerButton2->setIcon(QIcon(":/ikonice/2.png"));
-    markerButton2->setToolTip(naziviUAplikaciji[1]);
-    //markerButton2->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    markerLayout->addWidget(markerButton2);
-
-    QObject::connect(markerButton2, &QToolButton::clicked, [&]() {
-        onMarkerClick(2);
-    });
-
-    QToolButton *markerButton3 = new QToolButton(&window2);
-    markerButton3->setIcon(QIcon(":/ikonice/3.png"));
-    markerButton3->setToolTip(naziviUAplikaciji[2]);
-    //markerButton3->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    markerLayout->addWidget(markerButton3);
-
-    QObject::connect(markerButton3, &QToolButton::clicked, [&]() {
-        onMarkerClick(3);
-    });
-
-    QToolButton *markerButton4 = new QToolButton(&window2);
-    markerButton4->setIcon(QIcon(":/ikonice/4.png"));
-    markerButton4->setToolTip(naziviUAplikaciji[3]);
-    //markerButton4->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    markerLayout->addWidget(markerButton4);
-
-    QObject::connect(markerButton4, &QToolButton::clicked, [&]() {
-        onMarkerClick(4);
-    });
-
-    QToolButton *markerButton8 = new QToolButton(&window2);
-    markerButton8->setIcon(QIcon(":/ikonice/8.png"));
-    markerButton8->setToolTip(naziviUAplikaciji[4]);
-    //markerButton8->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    markerLayout->addWidget(markerButton8);
-
-    QObject::connect(markerButton8, &QToolButton::clicked, [&]() {
-        onMarkerClick(8);
-    });
-
-    QToolButton *markerButton5 = new QToolButton(&window2);
-    markerButton5->setIcon(QIcon(":/ikonice/5.png"));
-    markerButton5->setText("Rub");
-    markerButton5->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    markerLayout->addWidget(markerButton5);
-
-    QObject::connect(markerButton5, &QToolButton::clicked, [&]() {
-        onMarkerClick(5);
-    });
-
-    QToolButton *markerButton6 = new QToolButton(&window2);
-    markerButton6->setIcon(QIcon(":/ikonice/6.png"));
-    markerButton6->setText("Podloga");
-    markerButton6->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    markerLayout->addWidget(markerButton6);
-
-    QObject::connect(markerButton6, &QToolButton::clicked, [&]() {
-        onMarkerClick(6);
-    });
-
-    QToolButton *gumica = new QToolButton(&window2);
-    gumica->setIcon(QIcon(":/ikonice/7.png"));
-    gumica->setText(naziviUAplikaciji[5]);
-    gumica->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    markerLayout->addWidget(gumica);
-
-    QObject::connect(gumica, &QToolButton::clicked, [&]() {
-        onMarkerClick(7);
-    });
-
-  /*  QToolButton *mis = new QToolButton(&window2);
-    mis->setIcon(QIcon(":/ikonice/mis.png"));
-    markerLayout->addWidget(mis);
-
-    QObject::connect(mis, &QToolButton::clicked, [&]() {
-        onMarkerClick(9);
-    });*/
-
     //POSTAVLJANJE DEBLJINE MARKERA
     QLabel *label3 = new QLabel("Debljina:", &window2);
     markerLayout->addWidget(label3);
@@ -852,6 +775,9 @@ int main(int argc, char *argv[]) {
         markerThicknessComboBox->setCurrentText(QString::number(velicinaMarkera));
         writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije);
     });
+    ostaloLayout->addRow("Debljina Markera:", markerThicknessComboBox);
+    tabWidget->addTab(tabOstalo, "Ostalo");
+
 
     QToolButton *debljina2 = new QToolButton(&window2);
     debljina2->setIcon(QIcon(":/ikonice/srednji.png"));
@@ -891,11 +817,11 @@ int main(int argc, char *argv[]) {
         cv::imshow("Glavni pregled", slika); // prikaz anotacija
     });
 
-    //****************************************************************************//
+    /*----------------------------------------------------------------------------//
     //EVENTUALNA IZMJENA AKO TREBA DA SE JEDNIM KLIKOM UKLONE, PA VRATE ANOTACIJE
-    //****************************************************************************//
+    //----------------------------------------------------------------------------//
 
-    /*    QPushButton *vratiAnotacije = new QPushButton("Prikaži anotacije", &window2);
+        QPushButton *vratiAnotacije = new QPushButton("Prikaži anotacije", &window2);
     layout_alatna_traka->addWidget(vratiAnotacije);
     window2.setLayout(layout_alatna_traka);
 
@@ -1021,7 +947,6 @@ int main(int argc, char *argv[]) {
         layout_patchevi->addWidget(textbox);
         textboxes.push_back(textbox);
         textbox->setText(QString::number(dimenzije[i]));
-
     }
     QHBoxLayout *layout_patchevi2 = new QHBoxLayout(&prozorDimenzijePatcha);
     layout_patchevi->addLayout(layout_patchevi2);
@@ -1191,6 +1116,96 @@ int main(int argc, char *argv[]) {
         std::vector<cv::Mat>& referenca_slike = sveSlike;
         spasiSlike(referenca_slike, &window2, &window3);
     });
+
+
+
+    // Dodavanje donjeg layout-a za dugmad
+    QHBoxLayout *bottomLayout = new QHBoxLayout();
+
+
+
+    // Dugme "Default" u donjem levom uglu
+    QPushButton *defaultButton = new QPushButton("Default");
+    bottomLayout->addWidget(defaultButton, 0, Qt::AlignLeft);
+
+    bottomLayout->addStretch();
+
+    // Dugme "Spasi" u donjem desnom uglu
+    QPushButton *spasiButton = new QPushButton("Spasi");
+    bottomLayout->addWidget(spasiButton, 0, Qt::AlignRight);
+
+    // Povezivanje signala sa slotovima (ovde ćeš dodati šta treba da se desi)
+    QObject::connect(spasiButton, &QPushButton::clicked, [&]() {
+        // Prikupljanje vrednosti iz tabova i ažuriranje varijabli
+        velicinaMarkera = markerThicknessComboBox->currentText().toInt();
+
+        // Ažuriranje naziva markera
+        naziviUAplikaciji[0] = naziviLayout->itemAt(0, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[1] = naziviLayout->itemAt(1, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[2] = naziviLayout->itemAt(2, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[3] = naziviLayout->itemAt(3, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[4] = naziviLayout->itemAt(4, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[5] = naziviLayout->itemAt(5, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[6] = naziviLayout->itemAt(6, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[7] = naziviLayout->itemAt(7, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[8] = naziviLayout->itemAt(8, QFormLayout::FieldRole)->widget()->property("text").toString();
+        naziviUAplikaciji[9] = naziviLayout->itemAt(9, QFormLayout::FieldRole)->widget()->property("text").toString();
+
+        // Ažuriranje dimenzija
+        dimenzije[0] = sirinaEdit->text().toDouble();
+        dimenzije[1] = visinaEdit->text().toDouble();
+        dimenzije[2] = hStrideEdit->text().toDouble();
+        dimenzije[3] = vStrideEdit->text().toDouble();
+
+        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije);
+        updateUI(markerButton1, markerButton2, markerButton3, markerButton4, markerButton8, markerButton5, markerButton6, gumica, textboxes);
+    });
+
+
+    QObject::connect(defaultButton, &QPushButton::clicked, [&]() {
+        dimenzije = defaultDimenzije;
+        velicinaMarkera = defaultVelicinaMarkera;
+        naziviUAplikaciji = defaultNaziviUAplikaciji;
+        // Ažuriranje QLineEdit-ova u tabu "Patchevi"
+        sirinaEdit->setText(QString::number(defaultDimenzije[0]));
+        visinaEdit->setText(QString::number(defaultDimenzije[1]));
+        hStrideEdit->setText(QString::number(defaultDimenzije[2]));
+        vStrideEdit->setText(QString::number(defaultDimenzije[3]));
+
+        // Ažuriranje QLineEdit-ova u tabu "Nazivi"
+        naziviLayout->itemAt(0, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[0]);
+        naziviLayout->itemAt(1, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[1]);
+        naziviLayout->itemAt(2, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[2]);
+        naziviLayout->itemAt(3, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[3]);
+        naziviLayout->itemAt(4, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[4]);
+        naziviLayout->itemAt(5, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[5]);
+        naziviLayout->itemAt(6, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[6]);
+        naziviLayout->itemAt(7, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[7]);
+        naziviLayout->itemAt(8, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[8]);
+        naziviLayout->itemAt(9, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[9]);
+
+        // Ažuriranje QComboBox-a u tabu "Ostalo"
+        markerThicknessComboBox->setCurrentText(QString::number(defaultVelicinaMarkera));
+
+        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije);
+        updateUI(markerButton1, markerButton2, markerButton3, markerButton4, markerButton8, markerButton5, markerButton6, gumica, textboxes);
+
+    });
+
+    // Dodavanje donjeg layout-a u glavni layout prozora
+    layout_postavke->addLayout(bottomLayout);
+
+    // Dodaj QTabWidget u layout prozora za postavke
+
+
+
+    QPushButton *postavke = new QPushButton("Postavke", &window);
+    layout->addWidget(postavke);
+    QObject::connect(postavke, &QPushButton::clicked, [&]() {
+        prozorPostavke.show();
+    });
+
+
     QPushButton *krajPrograma = new QPushButton("Kraj sesije", &window2);
     layout_kraj->addWidget(krajPrograma);
 
@@ -1201,6 +1216,8 @@ int main(int argc, char *argv[]) {
         }
         cv::destroyAllWindows();
     });
+
+
 
     window.show();
     cv::waitKey(0);
