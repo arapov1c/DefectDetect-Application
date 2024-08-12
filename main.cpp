@@ -573,10 +573,10 @@ void updateUI(QToolButton *markerButton1, QToolButton *markerButton2, QToolButto
     markerButton5->setText(naziviUAplikaciji[6]);
     markerButton6->setText(naziviUAplikaciji[7]);
     gumica->setText(naziviUAplikaciji[5]);
-    textboxes[0]->setText(QString::number(dimenzije[0]));
-    textboxes[1]->setText(QString::number(dimenzije[1]));
-    textboxes[2]->setText(QString::number(dimenzije[2]));
-    textboxes[3]->setText(QString::number(dimenzije[3]));
+
+    for(int i=0; i<4; i++){
+        textboxes[i]->setText(QString::number(dimenzije[i]));
+    }
 }
 
 
@@ -1140,16 +1140,9 @@ int main(int argc, char *argv[]) {
         velicinaMarkera = markerThicknessComboBox->currentText().toInt();
 
         // Ažuriranje naziva markera
-        naziviUAplikaciji[0] = naziviLayout->itemAt(0, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[1] = naziviLayout->itemAt(1, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[2] = naziviLayout->itemAt(2, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[3] = naziviLayout->itemAt(3, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[4] = naziviLayout->itemAt(4, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[5] = naziviLayout->itemAt(5, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[6] = naziviLayout->itemAt(6, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[7] = naziviLayout->itemAt(7, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[8] = naziviLayout->itemAt(8, QFormLayout::FieldRole)->widget()->property("text").toString();
-        naziviUAplikaciji[9] = naziviLayout->itemAt(9, QFormLayout::FieldRole)->widget()->property("text").toString();
+        for (int i=0; i<10; i++){
+            naziviUAplikaciji[i] = naziviLayout->itemAt(i, QFormLayout::FieldRole)->widget()->property("text").toString();
+        }
 
         // Ažuriranje dimenzija
         dimenzije[0] = sirinaEdit->text().toDouble();
@@ -1173,17 +1166,9 @@ int main(int argc, char *argv[]) {
         vStrideEdit->setText(QString::number(defaultDimenzije[3]));
 
         // Ažuriranje QLineEdit-ova u tabu "Nazivi"
-        naziviLayout->itemAt(0, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[0]);
-        naziviLayout->itemAt(1, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[1]);
-        naziviLayout->itemAt(2, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[2]);
-        naziviLayout->itemAt(3, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[3]);
-        naziviLayout->itemAt(4, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[4]);
-        naziviLayout->itemAt(5, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[5]);
-        naziviLayout->itemAt(6, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[6]);
-        naziviLayout->itemAt(7, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[7]);
-        naziviLayout->itemAt(8, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[8]);
-        naziviLayout->itemAt(9, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[9]);
-
+        for (int i=0; i<10; i++){
+            naziviLayout->itemAt(i, QFormLayout::FieldRole)->widget()->setProperty("text", defaultNaziviUAplikaciji[i]);
+        }
         // Ažuriranje QComboBox-a u tabu "Ostalo"
         markerThicknessComboBox->setCurrentText(QString::number(defaultVelicinaMarkera));
 
