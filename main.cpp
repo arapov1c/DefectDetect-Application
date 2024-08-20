@@ -54,6 +54,8 @@ std::vector<cv::Mat> patchevi, patchevi_d1, patchevi_d2, patchevi_d3, patchevi_d
 QString imeSlike;
 QString directory;
 QString patchesRootDirectory;
+int defaultOdstupanje = 5;
+int odstupanjeZaOcjenu1 = defaultOdstupanje;
 std::vector<std::vector<int>> koordinate;
 void readConfig(const QString &fileName) {
     QFile file(fileName);
@@ -122,13 +124,16 @@ void readConfig(const QString &fileName) {
         else if(key=="nazivKlaseKoza"){
             naziviUAplikaciji[9] = value;
         }
+        else if(key=="odstupanjeZaOcjenu1"){
+            odstupanjeZaOcjenu1 = value.toInt();
+        }
 
     }
 
     file.close();
 }
 
-void writeConfig(const QString &fileName, int velicinaMarkera, const std::vector<QString> &nazivi, const std::vector<double> &dimenzije) {
+void writeConfig(const QString &fileName, int velicinaMarkera, const std::vector<QString> &nazivi, const std::vector<double> &dimenzije, int odstupanjeZaOcjenu1) {
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         qWarning() << "Cannot open file for writing:" << fileName;
@@ -156,6 +161,9 @@ void writeConfig(const QString &fileName, int velicinaMarkera, const std::vector
     out << "nazivPodloge=" << nazivi[7] << "\n";
     out << "nazivKlaseIspravno=" << nazivi[8] << "\n";
     out << "nazivKlaseKoza=" << nazivi[9] << "\n";
+
+    out << "odstupanjeZaOcjenu1=" << odstupanjeZaOcjenu1 << "\n";
+
 
     file.close();
 }
@@ -424,10 +432,11 @@ std::vector<cv::Mat> kreirajMaske(){
 int dajOcjenu(cv::Mat patch){
     int broj_bijelih = cv::countNonZero(patch);
     int broj_crnih = patch.total() - broj_bijelih;
-    if(broj_bijelih==0){
+    //std::cout<<"bijeli"<<broj_bijelih<<" crni"<<broj_crnih<<std::endl<<"ukupno"<<patch.total()<<" provjera"<<odstupanjeZaOcjenu1*0.01*patch.total()<<std::endl;
+    if(broj_bijelih<odstupanjeZaOcjenu1*0.01*patch.total()){
         return 0;
     }
-    else if(broj_crnih==0){
+    else if(broj_crnih<odstupanjeZaOcjenu1*0.01*patch.total()){
         return 2;
     }
     else
@@ -493,8 +502,122 @@ std::vector<std::vector<int>> kreirajPatch(std::vector<QLineEdit*> textboxes, st
     return ocjene;
 }
 
+void exportJson(std::vector<std::vector<cv::Mat>>& slike, std::vector<QString> naziv, QCheckBox* includeMasks, std::vector<std::vector<int>>& ocjene) {
+    QJsonObject root;
+
+    // 1. org_patchevi sekcija
+    QJsonArray orgPatchesArray;
+    for(int j=0; j < slike[0].size(); j++){
+        QJsonObject patch;
+        patch["file_name"] = imeSlike + "_" + QString("Patch%1").arg(QString::number(j + 1).rightJustified(4, '0')) + "_" + naziv[0];
+        patch["id"] = QString("%1").arg(QString::number(j + 1).rightJustified(4, '0'));
+        patch["height"] = dimenzije[1];
+        patch["width"] = dimenzije[0];
+        patch["x_koor"] = koordinate[j][0];
+        patch["y_koor"] = koordinate[j][1];
+
+        orgPatchesArray.append(patch);
+
+    }
+    root["org_patches"] = orgPatchesArray;
+
+    // 2. klase sekcija
+    std::vector<QString> naziv_klase = naziviUAplikaciji;
+    naziv_klase.erase(naziv_klase.begin() + 5); //brisanje gumice iz vektora naziva klasa
+    QJsonArray klaseArray;
+    for (int i = 0; i < 9; ++i) {
+        QJsonObject klasa;
+        klasa["class_id"] = i;
+        klasa["name"] = naziv_klase[i];
+        klaseArray.append(klasa);
+    }
+    root["classes"] = klaseArray;
+
+    // 3. annotation sekcija
+    QJsonArray annotationArray;
+    for (int i = 0; i < slike[0].size(); ++i) {
+        QJsonObject annotation;
+        annotation["id"] = QString("Ann-%1").arg(i);
+        annotation["patch_id"] = QString("%1").arg(QString::number(i + 1).rightJustified(4, '0'));
+        if (includeMasks && includeMasks->isChecked()) {
+            QJsonArray maskIdsArray;
+            for (int j = 1; j <= 9; j++) {
+                QString maskId = QString("%1 - mask %2").arg(j).arg(QString("%1").arg(QString::number(i + 1).rightJustified(4, '0')));
+                maskIdsArray.append(maskId);
+            }
+            annotation["mask_ids"] = maskIdsArray;
+        }
+
+
+        // class_ocjene niz
+        QJsonArray classOcjeneArray;
+        classOcjeneArray.append(ocjene[0][i]);
+        classOcjeneArray.append(ocjene[1][i]);
+        classOcjeneArray.append(ocjene[2][i]);
+        classOcjeneArray.append(ocjene[3][i]);
+        classOcjeneArray.append(ocjene[4][i]);
+        classOcjeneArray.append(ocjene[5][i]);
+        classOcjeneArray.append(ocjene[6][i]);
+        classOcjeneArray.append(ocjene[7][i]);
+        classOcjeneArray.append(ocjene[8][i]);
+
+        annotation["class_ocjene_ids"] = classOcjeneArray;
+
+        annotationArray.append(annotation);
+    }
+    root["annotation"] = annotationArray;
+
+    // 4. masks sekcija (ako je potrebno)
+    if (includeMasks && includeMasks->isChecked()) {
+        QJsonArray masksArray;
+        for (int j = 1; j<slike.size(); j++){
+            for (int i = 0; i < slike[j].size(); i++) {
+                QJsonObject mask;
+                mask["file_name"] = imeSlike + "_" + QString("Patch%1").arg(QString::number(i + 1).rightJustified(4, '0')) + "_" + "Maska " + naziv[j];
+                mask["id"] =  QString("%1 - mask %2").arg(j).arg(QString("%1")).arg(QString::number(i + 1).rightJustified(4, '0'));
+                mask["patch_id"] = QString("%1").arg(QString::number(i + 1).rightJustified(4, '0'));
+                mask["ocjena_id"] = QString::number(ocjene[j-1][i]);
+                masksArray.append(mask);
+            }
+        }
+        root["masks"] = masksArray;
+    }
+
+    QJsonArray ocjeneArray;
+    QJsonObject ocjena1;
+    ocjena1["ocjena_id"] = 0;
+    ocjena1["name"] = "Bez prisustva";
+    ocjeneArray.append(ocjena1);
+
+    QJsonObject ocjena2;
+    ocjena2["ocjena_id"] = 1;
+    ocjena2["name"] = "Djelimično prisustvo";
+    ocjeneArray.append(ocjena2);
+
+    QJsonObject ocjena3;
+    ocjena3["ocjena_id"] = 2;
+    ocjena3["name"] = "Potpuno prisustvo";
+    ocjeneArray.append(ocjena3);
+
+    root["ocjene"] = ocjeneArray;
+
+    // Kreiramo JSON dokument
+    QJsonDocument jsonDoc(root);
+
+    // Određujemo putanju do fajla koristeći patchesRootDirectory
+    QString jsonFilePath = patchesRootDirectory + "/output.json";
+    // Zapišemo JSON dokument u fajl
+    QFile file(jsonFilePath);
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write(jsonDoc.toJson(QJsonDocument::JsonFormat())); // Koristi Indented za leže čitanje
+        file.close();
+    } else {
+        qWarning("Could not open file for writing");
+    }
+}
+
 void eksportujPojedinePatcheve(QWidget* window6, QCheckBox* checkBoxDa, QCheckBox* checkBoxNe){
-    std::vector<std::vector<int>> trazene_ocjene(9, std::vector<int>(3, 3));
+    std::vector<std::vector<int>> trazene_ocjene(9, std::vector<int>(3, 3)), ocjene;
     for (int i=0; i<9; i++){
         for (int j=0; j<3; j++){
             if (checkboxes[i][j]->isChecked()) {
@@ -527,17 +650,11 @@ void eksportujPojedinePatcheve(QWidget* window6, QCheckBox* checkBoxDa, QCheckBo
                                         }
     }
 
-    std::vector<cv::Mat> spaseniPatchevi;
-    std::vector<cv::Mat> spasenaMaskaD1;
-    std::vector<cv::Mat> spasenaMaskaD2;
-    std::vector<cv::Mat> spasenaMaskaD3;
-    std::vector<cv::Mat> spasenaMaskaD4;
-    std::vector<cv::Mat> spasenaMaskaD5;
-    std::vector<cv::Mat> spasenaMaskaRub;
-    std::vector<cv::Mat> spasenaMaskaPodloga;
-    std::vector<cv::Mat> spasenaMaskaIspravno;
-    std::vector<cv::Mat> spasenaMaskaKoza;
+    std::vector<cv::Mat> spaseniPatchevi, spasenaMaskaD1, spasenaMaskaD2, spasenaMaskaD3, spasenaMaskaD4, spasenaMaskaD5, spasenaMaskaRub,
+        spasenaMaskaPodloga, spasenaMaskaIspravno, spasenaMaskaKoza;
 
+    std::vector<int> spasenaOcjenaD1, spasenaOcjenaD2, spasenaOcjenaD3, spasenaOcjenaD4, spasenaOcjenaD5, spasenaOcjenaRub, spasenaOcjenaPodloga,
+        spasenaOcjenaIspravno, spasenaOcjenaKoza;
 
     for (int i=0; i<spasi.size(); i++){
         spaseniPatchevi.push_back(patchevi[spasi[i]]);
@@ -550,9 +667,20 @@ void eksportujPojedinePatcheve(QWidget* window6, QCheckBox* checkBoxDa, QCheckBo
         spasenaMaskaPodloga.push_back(patchevi_podloga[spasi[i]]);
         spasenaMaskaIspravno.push_back(patchevi_ispravno[spasi[i]]);
         spasenaMaskaKoza.push_back(patchevi_koza[spasi[i]]);
+
+        spasenaOcjenaD1.push_back(ocjene_d1[spasi[i]]);
+        spasenaOcjenaD2.push_back(ocjene_d2[spasi[i]]);
+        spasenaOcjenaD3.push_back(ocjene_d3[spasi[i]]);
+        spasenaOcjenaD4.push_back(ocjene_d4[spasi[i]]);
+        spasenaOcjenaD5.push_back(ocjene_d5[spasi[i]]);
+        spasenaOcjenaRub.push_back(ocjene_rub[spasi[i]]);
+        spasenaOcjenaPodloga.push_back(ocjene_podloga[spasi[i]]);
+        spasenaOcjenaIspravno.push_back(ocjene_ispravno[spasi[i]]);
+        spasenaOcjenaKoza.push_back(ocjene_koza[spasi[i]]);
+
     }
 
-    std::vector<std::vector<cv::Mat>> spaseni;
+    std::vector<std::vector<cv::Mat>> spaseni, slikeJson;
     std::vector<QString> nazivi;
     if (checkBoxNe && checkBoxNe->isChecked()) {
         spaseni = {spaseniPatchevi};
@@ -564,9 +692,15 @@ void eksportujPojedinePatcheve(QWidget* window6, QCheckBox* checkBoxDa, QCheckBo
                   "Maska "+naziviUAplikaciji[3], "Maska "+naziviUAplikaciji[4], "Maska "+naziviUAplikaciji[6],
                   "Maska "+naziviUAplikaciji[7], "Maska "+naziviUAplikaciji[8], "Maska "+naziviUAplikaciji[9]};
     }
+    slikeJson = spaseni;
+    ocjene = {spasenaOcjenaD1, spasenaOcjenaD2, spasenaOcjenaD3, spasenaOcjenaD4, spasenaOcjenaD5, spasenaOcjenaRub, spasenaOcjenaPodloga,
+              spasenaOcjenaIspravno, spasenaOcjenaKoza};
 
-    if(!spaseniPatchevi.empty())
+    if(!spaseniPatchevi.empty()){
+
         spasiPatcheve(spaseni, window6, nazivi);
+        exportJson(slikeJson, nazivi, checkBoxDa, ocjene);
+    }
     spasi.clear();
 }
 
@@ -588,97 +722,6 @@ void updateUI(QToolButton *markerButton1, QToolButton *markerButton2, QToolButto
 }
 
 
-void exportJson(const std::vector<std::vector<cv::Mat>>& slike, std::vector<QString> naziv, bool includeMasks) {
-
-    QJsonObject root;
-
-    // 1. org_patchevi sekcija
-    QJsonArray orgPatchesArray;
-    for(int j=0; j < slike[0].size(); j++){
-        QJsonObject patch;
-        patch["file_name"] = imeSlike + "_" + QString("Patch%1").arg(QString::number(j + 1).rightJustified(4, '0')) + "_" + naziv[0];
-        patch["id"] = QString("%1").arg(QString::number(j + 1).rightJustified(4, '0'));
-        patch["height"] = dimenzije[1];
-        patch["width"] = dimenzije[0];
-        patch["x_koor"] = koordinate[j][0];
-        patch["y_koor"] = koordinate[j][1];
-
-        orgPatchesArray.append(patch);
-
-    }
-    root["org_patches"] = orgPatchesArray;
-
-    /*// 2. masks sekcija (ako je potrebno)
-    if (includeMasks) {
-        QJsonArray masksArray;
-        for (int i = 0; i < slike[0].size(); i++) {
-            if (slike.size() > 1) {
-                QJsonObject mask;
-                mask["file_name"] = spasi[i][1];
-                mask["id"] = QString("mask-%1").arg(i);
-                mask["org_patch_id"] = QString("patch-%1").arg(i);
-                mask["ocjene"] = 1; // Primer, zameni sa stvarnim vrednostima
-                masksArray.append(mask);
-            }
-        }
-        root["masks"] = masksArray;
-    }*/
-
-    // 3. klase sekcija
-    std::vector<QString> naziv_klase = naziviUAplikaciji;
-    naziv_klase.erase(naziv_klase.begin() + 5); //brisanje gumice iz vektora naziva klasa
-    QJsonArray klaseArray;
-    for (int i = 0; i < 9; ++i) {
-        QJsonObject klasa;
-        klasa["class_id"] = i;
-        klasa["name"] = naziv_klase[i];
-        klaseArray.append(klasa);
-    }
-    root["classes"] = klaseArray;
-
-    // 4. annotation sekcija
-    QJsonArray annotationArray;
-    for (int i = 0; i < slike[0].size(); ++i) {
-        QJsonObject annotation;
-        annotation["id"] = QString("Ann-%1").arg(i);
-        annotation["patch_id"] = QString("%1").arg(QString::number(i + 1).rightJustified(4, '0'));
-        if (includeMasks && slike[i].size() > 1) {
-            annotation["mask_id"] = QString("mask-%1").arg(i);
-        }
-
-        // class_ocjene niz
-        QJsonArray classOcjeneArray;
-        classOcjeneArray.append(ocjene_d1[i]);
-        classOcjeneArray.append(ocjene_d2[i]);
-        classOcjeneArray.append(ocjene_d3[i]);
-        classOcjeneArray.append(ocjene_d4[i]);
-        classOcjeneArray.append(ocjene_d5[i]);
-        classOcjeneArray.append(ocjene_rub[i]);
-        classOcjeneArray.append(ocjene_podloga[i]);
-        classOcjeneArray.append(ocjene_ispravno[i]);
-        classOcjeneArray.append(ocjene_koza[i]);
-
-        annotation["class_ocjene"] = classOcjeneArray;
-
-        annotationArray.append(annotation);
-    }
-    root["annotation"] = annotationArray;
-
-    // Kreiramo JSON dokument
-    QJsonDocument jsonDoc(root);
-
-    // Određujemo putanju do fajla koristeći patchesRootDirectory
-    QString jsonFilePath = patchesRootDirectory + "/output.json";
-    std::cout<<patchesRootDirectory.toStdString()<<std::endl;
-    // Zapišemo JSON dokument u fajl
-    QFile file(jsonFilePath);
-    if (file.open(QIODevice::WriteOnly)) {
-        file.write(jsonDoc.toJson(QJsonDocument::Indented)); // Koristi Indented za leže čitanje
-        file.close();
-    } else {
-        qWarning("Could not open file for writing");
-    }
-}
 
 int main(int argc, char *argv[]) {
 
@@ -861,6 +904,13 @@ int main(int argc, char *argv[]) {
 
     markerThicknessComboBox->setCurrentText(QString::number(velicinaMarkera));
 
+    QComboBox *dozvoljenoOdstupanjeZaOcjenu1 = new QComboBox();
+    for (int i = 1; i <= 30; i += 1) {
+       dozvoljenoOdstupanjeZaOcjenu1->addItem(QString::number(i));
+    }
+
+    dozvoljenoOdstupanjeZaOcjenu1->setCurrentText(QString::number(odstupanjeZaOcjenu1));
+
     //POSTAVLJANJE DEBLJINE MARKERA
     QLabel *label3 = new QLabel("Debljina:", &window2);
     markerLayout->addWidget(label3);
@@ -873,9 +923,11 @@ int main(int argc, char *argv[]) {
     QObject::connect(debljina1, &QToolButton::clicked, [&]() {
         velicinaMarkera = 10;
         markerThicknessComboBox->setCurrentText(QString::number(velicinaMarkera));
-        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije);
+        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije, odstupanjeZaOcjenu1);
     });
     ostaloLayout->addRow("Debljina Markera:", markerThicknessComboBox);
+    ostaloLayout->addRow("Odstupanje za ocjenu 1:", dozvoljenoOdstupanjeZaOcjenu1);
+
     tabWidget->addTab(tabOstalo, "Ostalo");
 
 
@@ -887,7 +939,7 @@ int main(int argc, char *argv[]) {
     QObject::connect(debljina2, &QToolButton::clicked, [&]() {
         velicinaMarkera = 20;
         markerThicknessComboBox->setCurrentText(QString::number(velicinaMarkera));
-        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije);
+        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije, odstupanjeZaOcjenu1);
     });
 
     QToolButton *debljina3 = new QToolButton(&window2);
@@ -898,7 +950,7 @@ int main(int argc, char *argv[]) {
     QObject::connect(debljina3, &QToolButton::clicked, [&]() {
         velicinaMarkera = 30;
         markerThicknessComboBox->setCurrentText(QString::number(velicinaMarkera));
-        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije);
+        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije, odstupanjeZaOcjenu1);
     });
 
     QHBoxLayout *layout_kraj = new QHBoxLayout;
@@ -1145,17 +1197,21 @@ int main(int argc, char *argv[]) {
             spasi = {patchevi};
             nazivi = {"Original"};
         } else if (checkBoxDa && checkBoxDa->isChecked()) {
-            spasi = {patchevi, patchevi_d1, patchevi_d2, patchevi_d3, patchevi_d4, patchevi_d5,
-                                                    patchevi_ispravno, patchevi_koza, patchevi_podloga, patchevi_rub};
+            spasi = {patchevi, patchevi_d1, patchevi_d2, patchevi_d3, patchevi_d4, patchevi_d5, patchevi_rub, patchevi_podloga,
+                                                                   patchevi_ispravno, patchevi_koza};
             nazivi = {"Original", "Maska "+naziviUAplikaciji[0], "Maska "+naziviUAplikaciji[1], "Maska "+naziviUAplikaciji[2],
-                      "Maska "+naziviUAplikaciji[3], "Maska "+naziviUAplikaciji[4], "Maska "+naziviUAplikaciji[8],
-                      "Maska "+naziviUAplikaciji[9], "Maska "+naziviUAplikaciji[7], "Maska "+naziviUAplikaciji[6]};
+                      "Maska "+naziviUAplikaciji[3], "Maska "+naziviUAplikaciji[4], "Maska "+naziviUAplikaciji[6],
+                      "Maska "+naziviUAplikaciji[7], "Maska "+naziviUAplikaciji[8], "Maska "+naziviUAplikaciji[9]};
         }
 
-        if(!patchevi.empty())
+        std::vector<std::vector<cv::Mat>> slikeJson = spasi;
+
+        if(!spasi.empty())
         {
+            std::vector<std::vector<int>> ocjene = {ocjene_d1, ocjene_d2, ocjene_d3, ocjene_d4, ocjene_d5, ocjene_rub, ocjene_podloga, ocjene_ispravno, ocjene_koza};
             spasiPatcheve(spasi, &prozorOdabirEksporta, nazivi);
-            exportJson(spasi, nazivi, 0);
+            exportJson(slikeJson, nazivi, checkBoxDa, ocjene);
+
         }
         prozorOdabirEksporta.close();
     });
@@ -1241,6 +1297,7 @@ int main(int argc, char *argv[]) {
     QObject::connect(spasiButton, &QPushButton::clicked, [&]() {
         // Prikupljanje vrednosti iz tabova i ažuriranje varijabli
         velicinaMarkera = markerThicknessComboBox->currentText().toInt();
+        odstupanjeZaOcjenu1 = dozvoljenoOdstupanjeZaOcjenu1->currentText().toInt();
 
         // Ažuriranje naziva markera
         for (int i=0; i<10; i++){
@@ -1253,7 +1310,7 @@ int main(int argc, char *argv[]) {
         dimenzije[2] = hStrideEdit->text().toDouble();
         dimenzije[3] = vStrideEdit->text().toDouble();
 
-        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije);
+        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije, odstupanjeZaOcjenu1);
         updateUI(markerButton1, markerButton2, markerButton3, markerButton4, markerButton8, markerButton5, markerButton6, gumica, textboxes);
     });
 
@@ -1262,6 +1319,7 @@ int main(int argc, char *argv[]) {
         dimenzije = defaultDimenzije;
         velicinaMarkera = defaultVelicinaMarkera;
         naziviUAplikaciji = defaultNaziviUAplikaciji;
+        odstupanjeZaOcjenu1 = defaultOdstupanje;
         // Ažuriranje QLineEdit-ova u tabu "Patchevi"
         sirinaEdit->setText(QString::number(defaultDimenzije[0]));
         visinaEdit->setText(QString::number(defaultDimenzije[1]));
@@ -1274,8 +1332,9 @@ int main(int argc, char *argv[]) {
         }
         // Ažuriranje QComboBox-a u tabu "Ostalo"
         markerThicknessComboBox->setCurrentText(QString::number(defaultVelicinaMarkera));
+        dozvoljenoOdstupanjeZaOcjenu1->setCurrentText(QString::number(defaultOdstupanje));
 
-        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije);
+        writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije, odstupanjeZaOcjenu1);
         updateUI(markerButton1, markerButton2, markerButton3, markerButton4, markerButton8, markerButton5, markerButton6, gumica, textboxes);
 
     });
