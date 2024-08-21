@@ -36,27 +36,22 @@ cv::Scalar boja;
 cv::Point prethodnaTacka(-1, -1);
 bool crtanjeAktivno = false;
 int defaultVelicinaMarkera = 20;
-int velicinaMarkera = defaultVelicinaMarkera;
-int trenutniMarker = 1;
+int velicinaMarkera = defaultVelicinaMarkera, trenutniMarker = 1;
 std::vector<double> defaultDimenzije = {200,200,50,50};
 std::vector<double> dimenzije = defaultDimenzije;
-std::vector<int> indeksi;
-std::vector<int> spasi;
-std::vector<cv::Mat> sveSlike;
+std::vector<int> indeksi, spasi;
 std::vector<std::vector<QCheckBox*>> checkboxes;
 std::vector<QString> defaultNaziviUAplikaciji = {"Defekt 1", "Defekt 2", "Defekt 3", "Defekt 4", "Defekt 5", "Gumica",
                                                  "Rub", "Podloga", "Klasa ispravno", "Koza"};
 std::vector<QString> naziviUAplikaciji = defaultNaziviUAplikaciji;
-QString putanja;
-QString putanjaSpasene;
+QString putanja, putanjaSpasene;
 std::vector<int> ocjene_d1, ocjene_d2, ocjene_d3, ocjene_d4, ocjene_d5, ocjene_rub, ocjene_podloga, ocjene_ispravno, ocjene_koza;
-std::vector<cv::Mat> patchevi, patchevi_d1, patchevi_d2, patchevi_d3, patchevi_d4, patchevi_d5, patchevi_rub, patchevi_podloga, patchevi_ispravno, patchevi_koza;
-QString imeSlike;
-QString directory;
-QString patchesRootDirectory;
+std::vector<cv::Mat> sveSlike, patchevi, patchevi_d1, patchevi_d2, patchevi_d3, patchevi_d4, patchevi_d5, patchevi_rub, patchevi_podloga, patchevi_ispravno, patchevi_koza;
+QString imeSlike, directory, patchesRootDirectory;
 int defaultOdstupanje = 5;
 int odstupanjeZaOcjenu1 = defaultOdstupanje;
 std::vector<std::vector<int>> koordinate;
+
 void readConfig(const QString &fileName) {
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -848,108 +843,110 @@ int main(int argc, char *argv[]) {
     // Čitanje konfiguracijskog fajla
     readConfig(configFileName);
 
-    QWidget window;
-    window.setWindowTitle("DefectDetect");
-    QVBoxLayout *layout = new QVBoxLayout(&window);
+    QWidget mainWindow;
+    QIcon logoMini(":/ikonice/logo-mini.png");
+    mainWindow.setWindowTitle("DefectDetect");
+    mainWindow.setWindowIcon(logoMini);
+    QVBoxLayout *layout = new QVBoxLayout(&mainWindow);
 
-    QLabel *imageLabel = new QLabel(&window);
+    QLabel *imageLabel = new QLabel(&mainWindow);
     QPixmap pixmap(":/ikonice/logo.png");
     imageLabel->setPixmap(pixmap);
     imageLabel->setScaledContents(true);
     layout->addWidget(imageLabel);
 
-    //ALATNA TRAKA
-    QWidget window2;
-    window2.setWindowTitle("DefectDetect");
-    QVBoxLayout *layout_alatna_traka = new QVBoxLayout(&window2);
+    QWidget toolsWindow;
+    toolsWindow.setWindowTitle("DefectDetect");
+    toolsWindow.setWindowIcon(logoMini);
+    QVBoxLayout *layout_alatna_traka = new QVBoxLayout(&toolsWindow);
 
     //Kreiranje dugmeta za učitavanje slike
-    QPushButton *button = new QPushButton("Odaberi sliku", &window);
-    layout->addWidget(button);
-    QObject::connect(button, &QPushButton::clicked, [&]() {
-        onButtonClick(&window, &window2,1);
+    QPushButton *buttonOdabirSlike = new QPushButton("Odaberi sliku", &mainWindow);
+    layout->addWidget(buttonOdabirSlike);
+    QObject::connect(buttonOdabirSlike, &QPushButton::clicked, [&]() {
+        onButtonClick(&mainWindow, &toolsWindow,1);
     });
 
-    QPushButton *button2 = new QPushButton("Učitaj sesiju", &window);
-    layout->addWidget(button2);
-    QObject::connect(button2, &QPushButton::clicked, [&]() {
-        onButtonClick(&window, &window2,2);
+    QPushButton *buttonUcitajSesiju = new QPushButton("Učitaj sesiju", &mainWindow);
+    layout->addWidget(buttonUcitajSesiju);
+    QObject::connect(buttonUcitajSesiju, &QPushButton::clicked, [&]() {
+        onButtonClick(&mainWindow, &toolsWindow,2);
     });
 
     QHBoxLayout *markerLayout = new QHBoxLayout;
     layout_alatna_traka->addLayout(markerLayout);
 
-    QToolButton *markerButton1 = new QToolButton(&window2);
-    markerButton1->setIcon(QIcon(":/ikonice/1.png"));
-    markerButton1->setToolTip(naziviUAplikaciji[0]);
+    QToolButton *marker1 = new QToolButton(&toolsWindow);
+    marker1->setIcon(QIcon(":/ikonice/1.png"));
+    marker1->setToolTip(naziviUAplikaciji[0]);
     //markerButton1->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    markerLayout->addWidget(markerButton1);
+    markerLayout->addWidget(marker1);
 
-    QObject::connect(markerButton1, &QToolButton::clicked, [&]() {
+    QObject::connect(marker1, &QToolButton::clicked, [&]() {
         onMarkerClick(1);
     });
 
-    QToolButton *markerButton2 = new QToolButton(&window2);
-    markerButton2->setIcon(QIcon(":/ikonice/2.png"));
-    markerButton2->setToolTip(naziviUAplikaciji[1]);
+    QToolButton *marker2 = new QToolButton(&toolsWindow);
+    marker2->setIcon(QIcon(":/ikonice/2.png"));
+    marker2->setToolTip(naziviUAplikaciji[1]);
     //markerButton2->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    markerLayout->addWidget(markerButton2);
+    markerLayout->addWidget(marker2);
 
-    QObject::connect(markerButton2, &QToolButton::clicked, [&]() {
+    QObject::connect(marker2, &QToolButton::clicked, [&]() {
         onMarkerClick(2);
     });
 
-    QToolButton *markerButton3 = new QToolButton(&window2);
-    markerButton3->setIcon(QIcon(":/ikonice/3.png"));
-    markerButton3->setToolTip(naziviUAplikaciji[2]);
+    QToolButton *marker3 = new QToolButton(&toolsWindow);
+    marker3->setIcon(QIcon(":/ikonice/3.png"));
+    marker3->setToolTip(naziviUAplikaciji[2]);
     //markerButton3->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    markerLayout->addWidget(markerButton3);
+    markerLayout->addWidget(marker3);
 
-    QObject::connect(markerButton3, &QToolButton::clicked, [&]() {
+    QObject::connect(marker3, &QToolButton::clicked, [&]() {
         onMarkerClick(3);
     });
 
-    QToolButton *markerButton4 = new QToolButton(&window2);
-    markerButton4->setIcon(QIcon(":/ikonice/4.png"));
-    markerButton4->setToolTip(naziviUAplikaciji[3]);
+    QToolButton *marker4 = new QToolButton(&toolsWindow);
+    marker4->setIcon(QIcon(":/ikonice/4.png"));
+    marker4->setToolTip(naziviUAplikaciji[3]);
     //markerButton4->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    markerLayout->addWidget(markerButton4);
+    markerLayout->addWidget(marker4);
 
-    QObject::connect(markerButton4, &QToolButton::clicked, [&]() {
+    QObject::connect(marker4, &QToolButton::clicked, [&]() {
         onMarkerClick(4);
     });
 
-    QToolButton *markerButton8 = new QToolButton(&window2);
-    markerButton8->setIcon(QIcon(":/ikonice/8.png"));
-    markerButton8->setToolTip(naziviUAplikaciji[4]);
+    QToolButton *marker5 = new QToolButton(&toolsWindow);
+    marker5->setIcon(QIcon(":/ikonice/8.png"));
+    marker5->setToolTip(naziviUAplikaciji[4]);
     //markerButton8->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    markerLayout->addWidget(markerButton8);
+    markerLayout->addWidget(marker5);
 
-    QObject::connect(markerButton8, &QToolButton::clicked, [&]() {
+    QObject::connect(marker5, &QToolButton::clicked, [&]() {
         onMarkerClick(8);
     });
 
-    QToolButton *markerButton5 = new QToolButton(&window2);
-    markerButton5->setIcon(QIcon(":/ikonice/5.png"));
-    markerButton5->setText(naziviUAplikaciji[6]);
-    markerButton5->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    markerLayout->addWidget(markerButton5);
+    QToolButton *markerRub = new QToolButton(&toolsWindow);
+    markerRub->setIcon(QIcon(":/ikonice/5.png"));
+    markerRub->setText(naziviUAplikaciji[6]);
+    markerRub->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    markerLayout->addWidget(markerRub);
 
-    QObject::connect(markerButton5, &QToolButton::clicked, [&]() {
+    QObject::connect(markerRub, &QToolButton::clicked, [&]() {
         onMarkerClick(5);
     });
 
-    QToolButton *markerButton6 = new QToolButton(&window2);
-    markerButton6->setIcon(QIcon(":/ikonice/6.png"));
-    markerButton6->setText(naziviUAplikaciji[7]);
-    markerButton6->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    markerLayout->addWidget(markerButton6);
+    QToolButton *markerPodloga = new QToolButton(&toolsWindow);
+    markerPodloga->setIcon(QIcon(":/ikonice/6.png"));
+    markerPodloga->setText(naziviUAplikaciji[7]);
+    markerPodloga->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    markerLayout->addWidget(markerPodloga);
 
-    QObject::connect(markerButton6, &QToolButton::clicked, [&]() {
+    QObject::connect(markerPodloga, &QToolButton::clicked, [&]() {
         onMarkerClick(6);
     });
 
-    QToolButton *gumica = new QToolButton(&window2);
+    QToolButton *gumica = new QToolButton(&toolsWindow);
     gumica->setIcon(QIcon(":/ikonice/7.png"));
     gumica->setText(naziviUAplikaciji[5]);
     gumica->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
@@ -960,11 +957,13 @@ int main(int argc, char *argv[]) {
     });
 
     //POSTAVKE
-    QWidget prozorPostavke;
-    prozorPostavke.setWindowTitle("Postavke");
-    QVBoxLayout *layout_postavke = new QVBoxLayout(&prozorPostavke);
+    QWidget settingsWindow;
+    settingsWindow.setWindowTitle("Postavke");
+    settingsWindow.setWindowIcon(logoMini);
 
-    QTabWidget *tabWidget = new QTabWidget(&prozorPostavke);
+    QVBoxLayout *layout_postavke = new QVBoxLayout(&settingsWindow);
+
+    QTabWidget *tabWidget = new QTabWidget(&settingsWindow);
     layout_postavke->addWidget(tabWidget);
 
 
@@ -1028,10 +1027,10 @@ int main(int argc, char *argv[]) {
     dozvoljenoOdstupanjeZaOcjenu1->setCurrentText(QString::number(odstupanjeZaOcjenu1));
 
     //POSTAVLJANJE DEBLJINE MARKERA
-    QLabel *label3 = new QLabel("Debljina:", &window2);
-    markerLayout->addWidget(label3);
+    QLabel *labelDebljina = new QLabel("Debljina:", &toolsWindow);
+    markerLayout->addWidget(labelDebljina);
 
-    QToolButton *debljina1 = new QToolButton(&window2);
+    QToolButton *debljina1 = new QToolButton(&toolsWindow);
     debljina1->setIcon(QIcon(":/ikonice/najtanji.png"));
     debljina1->setToolTip("1");
     markerLayout->addWidget(debljina1);
@@ -1047,7 +1046,7 @@ int main(int argc, char *argv[]) {
     tabWidget->addTab(tabOstalo, "Ostalo");
 
 
-    QToolButton *debljina2 = new QToolButton(&window2);
+    QToolButton *debljina2 = new QToolButton(&toolsWindow);
     debljina2->setIcon(QIcon(":/ikonice/srednji.png"));
     debljina2->setToolTip("2");
     markerLayout->addWidget(debljina2);
@@ -1058,7 +1057,7 @@ int main(int argc, char *argv[]) {
         writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije, odstupanjeZaOcjenu1);
     });
 
-    QToolButton *debljina3 = new QToolButton(&window2);
+    QToolButton *debljina3 = new QToolButton(&toolsWindow);
     debljina3->setIcon(QIcon(":/ikonice/najdeblji.png"));
     debljina3->setToolTip("3");
     markerLayout->addWidget(debljina3);
@@ -1072,9 +1071,9 @@ int main(int argc, char *argv[]) {
     QHBoxLayout *layout_kraj = new QHBoxLayout;
     layout_alatna_traka->addLayout(layout_kraj);
     //PRIVREMENO UKLANJANJE ANOTACIJA
-    QPushButton *privremeniPregled = new QPushButton("Ukloni anotacije", &window2);
+    QPushButton *privremeniPregled = new QPushButton("Ukloni anotacije", &toolsWindow);
     layout_kraj->addWidget(privremeniPregled);
-    window2.setLayout(layout_kraj);
+    toolsWindow.setLayout(layout_kraj);
 
     QObject::connect(privremeniPregled, &QPushButton::pressed, [&]() {
         //cv::Mat originalna_slika = cv::imread(putanja); //prikaz originala dok je dugme pritisnuto
@@ -1099,51 +1098,55 @@ int main(int argc, char *argv[]) {
     });*/
 
     //PROZOR UPOZORENJA ZA BRISANJE SVIH ANOTACIJA
-    QWidget window4;
-    window4.setWindowTitle("Brisanje anotacija");
-    QVBoxLayout *layout_brisanje_anotacija = new QVBoxLayout(&window4);
-    window4.setLayout(layout_brisanje_anotacija);
+    QWidget warningWindow;
+    warningWindow.setWindowTitle("Brisanje anotacija");
+    warningWindow.setWindowIcon(logoMini);
 
-    QLabel *label4 = new QLabel("Da li ste sigurni da želite obrisati sve anotacije?", &window4);
-    label4->setAlignment(Qt::AlignCenter); // Centriranje teksta
-    layout_brisanje_anotacija->addWidget(label4);
+    QVBoxLayout *layout_brisanje_anotacija = new QVBoxLayout(&warningWindow);
+    warningWindow.setLayout(layout_brisanje_anotacija);
 
-    QPushButton *Da = new QPushButton("Da", &window4);
+    QLabel *warningLabel = new QLabel("Da li ste sigurni da želite obrisati sve anotacije?", &warningWindow);
+    warningLabel->setAlignment(Qt::AlignCenter); // Centriranje teksta
+    layout_brisanje_anotacija->addWidget(warningLabel);
+
+    QPushButton *Da = new QPushButton("Da", &warningWindow);
     layout_brisanje_anotacija->addWidget(Da);
 
     QObject::connect(Da, &QPushButton::clicked, [&]() {
         slika = originalnaSlika.clone();
         cv::imshow("Glavni pregled", slika);
-        window4.close();
+        warningWindow.close();
     });
 
-    QPushButton *Ne = new QPushButton("Ne", &window4);
+    QPushButton *Ne = new QPushButton("Ne", &warningWindow);
     layout_brisanje_anotacija->addWidget(Ne);
 
     QObject::connect(Ne, &QPushButton::clicked, [&]() {
-        window4.close();
+        warningWindow.close();
     });
 
-    QPushButton *obrisiSve = new QPushButton("Obriši anotacije", &window2);
+    QPushButton *obrisiSve = new QPushButton("Obriši anotacije", &toolsWindow);
     layout_kraj->addWidget(obrisiSve);
 
     QObject::connect(obrisiSve, &QPushButton::clicked, [&]() {
-        window4.show();
+        warningWindow.show();
     });
 
     //BUTTON ZA OZNAKU KRAJA ANOTACIJE, KAKO BI SE MOGLE KREIRATI MASKE I PATCHEVI
-    QWidget prozorKrajAnotacija;
-    prozorKrajAnotacija.setWindowTitle("Kraj anotacija");
-    QVBoxLayout *layout_kraj_anotacija = new QVBoxLayout(&prozorKrajAnotacija);
-    prozorKrajAnotacija.setLayout(layout_kraj_anotacija);
+    QWidget endAnnWindow;
+    endAnnWindow.setWindowTitle("Kraj anotacija");
+    endAnnWindow.setWindowIcon(logoMini);
 
-    QPushButton *krajAnotacije = new QPushButton("Završi anotiranje", &window2);
+    QVBoxLayout *layout_kraj_anotacija = new QVBoxLayout(&endAnnWindow);
+    endAnnWindow.setLayout(layout_kraj_anotacija);
+
+    QPushButton *krajAnotacije = new QPushButton("Završi anotiranje", &toolsWindow);
     layout_kraj->addWidget(krajAnotacije);
 
     std::vector<cv::Mat> maske;
 
     QObject::connect(krajAnotacije, &QPushButton::clicked, [&]() {
-        prozorKrajAnotacija.show();
+        endAnnWindow.show();
         patchevi.clear();
         patchevi_d1.clear();
         patchevi_d2.clear();
@@ -1174,7 +1177,7 @@ int main(int argc, char *argv[]) {
     });
 
 
-    QPushButton *prikazMaski = new QPushButton("Prikaži maske", &prozorKrajAnotacija);
+    QPushButton *prikazMaski = new QPushButton("Prikaži maske", &endAnnWindow);
     layout_kraj_anotacija->addWidget(prikazMaski);
 
     QObject::connect(prikazMaski, &QPushButton::clicked, [&]() {
@@ -1189,84 +1192,90 @@ int main(int argc, char *argv[]) {
     });
 
     //PROZOR UPOZORENJE DA SU SLIKE SPAŠENE
-    QWidget window3;
-    window3.setWindowTitle("Anotirana slika");
-    QVBoxLayout *layout_spasiSlike = new QVBoxLayout(&window3);
+    QWidget savedWindow;
+    savedWindow.setWindowTitle("Spašeno");
+    savedWindow.setWindowIcon(logoMini);
 
-    QLabel *label2 = new QLabel("Slika je spašena", &window3);
-    label2->setAlignment(Qt::AlignCenter); // Centriranje teksta
-    layout_spasiSlike->addWidget(label2);
+    QVBoxLayout *layout_spasiSlike = new QVBoxLayout(&savedWindow);
+
+    QLabel *savedLabel = new QLabel("Slika je spašena", &savedWindow);
+    savedLabel->setAlignment(Qt::AlignCenter); // Centriranje teksta
+    layout_spasiSlike->addWidget(savedLabel);
 
     //PROZOR ZA UNOS DIMENZIJA PATCHA
-    QWidget prozorDimenzijePatcha;
-    prozorDimenzijePatcha.setWindowTitle("Izrada patcheva");
-    QVBoxLayout *layout_patchevi = new QVBoxLayout(&prozorDimenzijePatcha);
-    prozorDimenzijePatcha.setLayout(layout_patchevi);
+    QWidget patchDimWindow;
+    patchDimWindow.setWindowTitle("Izrada patcheva");
+    patchDimWindow.setWindowIcon(logoMini);
+
+    QVBoxLayout *layout_patchevi = new QVBoxLayout(&patchDimWindow);
+    patchDimWindow.setLayout(layout_patchevi);
 
     std::vector<QLineEdit*> textboxes;
     for (int i = 0; i < 4; ++i) {
         std::vector<QString> nazivi = {"Širina patcha", "Visina patcha", "Horizonatlni stride", "Vertikalni stride"};
         QString label_text =  nazivi[i] + ":";
-        QLabel *label = new QLabel(label_text, &prozorDimenzijePatcha);
+        QLabel *label = new QLabel(label_text, &patchDimWindow);
         layout_patchevi->addWidget(label);
 
         // Kreirajte textbox za unos cijelih brojeva
-        QLineEdit *textbox = new QLineEdit(&prozorDimenzijePatcha);
+        QLineEdit *textbox = new QLineEdit(&patchDimWindow);
         textbox->setValidator(new QIntValidator(textbox));
         layout_patchevi->addWidget(textbox);
         textboxes.push_back(textbox);
         textbox->setText(QString::number(dimenzije[i]));
     }
-    QHBoxLayout *layout_patchevi2 = new QHBoxLayout(&prozorDimenzijePatcha);
+    QHBoxLayout *layout_patchevi2 = new QHBoxLayout(&patchDimWindow);
     layout_patchevi->addLayout(layout_patchevi2);
 
     std::vector<std::vector<int>> ocjene;
 
 
-    QPushButton *izradiPatch = new QPushButton("Izradi patcheve", &prozorDimenzijePatcha);
+    QPushButton *izradiPatch = new QPushButton("Izradi patcheve", &patchDimWindow);
     layout_patchevi2->addWidget(izradiPatch);
 
 
     QObject::connect(izradiPatch, &QPushButton::clicked, [&]() {
-        ocjene = kreirajPatch(textboxes, maske, &prozorDimenzijePatcha);
+        ocjene = kreirajPatch(textboxes, maske, &patchDimWindow);
     });
 
-    QPushButton *patcheviButton = new QPushButton("Izradi patcheve", &prozorKrajAnotacija);
+    QPushButton *patcheviButton = new QPushButton("Izradi patcheve", &endAnnWindow);
     layout_kraj_anotacija->addWidget(patcheviButton);
 
     QObject::connect(patcheviButton, &QPushButton::clicked, [&]() {
-        prozorDimenzijePatcha.show();
+        patchDimWindow.show();
     });
 
-    QPushButton *patcheviExport = new QPushButton("Eksportuj patcheve", &prozorKrajAnotacija);
+    QPushButton *patcheviExport = new QPushButton("Eksportuj patcheve", &endAnnWindow);
     layout_kraj_anotacija->addWidget(patcheviExport);
 
 
-    QWidget prozorOdabirEksporta;
-    prozorOdabirEksporta.setWindowTitle("Odabir eksporta");
-    QVBoxLayout *layout_odabir_eksporta = new QVBoxLayout(&prozorOdabirEksporta);
-    prozorOdabirEksporta.setLayout(layout_odabir_eksporta);
+    QWidget chooseExpWindow;
+    chooseExpWindow.setWindowTitle("Odabir eksporta");
+    chooseExpWindow.setWindowIcon(logoMini);
 
-    QPushButton *eksportSvih = new QPushButton("Eksportuj sve patcheve", &prozorOdabirEksporta);
+    QVBoxLayout *layout_odabir_eksporta = new QVBoxLayout(&chooseExpWindow);
+    chooseExpWindow.setLayout(layout_odabir_eksporta);
+
+    QPushButton *eksportSvih = new QPushButton("Eksportuj sve patcheve", &chooseExpWindow);
     layout_odabir_eksporta->addWidget(eksportSvih);
 
-    QPushButton *eksportPojedinih = new QPushButton("Eksportuj odabrane patcheve", &prozorOdabirEksporta);
+    QPushButton *eksportPojedinih = new QPushButton("Eksportuj odabrane patcheve", &chooseExpWindow);
     layout_odabir_eksporta->addWidget(eksportPojedinih);
 
     //PROZOR ZA EXPORT PATCHEVA PREKO OCJENA
-    QWidget prozorOcjene;
-    prozorOcjene.setWindowTitle("Eksport patcheva");
-    QVBoxLayout *layout_export_glavni = new QVBoxLayout(&prozorOcjene);
-    prozorOcjene.setLayout(layout_export_glavni);
+    QWidget gradesWindow;
+    gradesWindow.setWindowTitle("Eksport patcheva");
+    gradesWindow.setWindowIcon(logoMini);
 
-
+    QVBoxLayout *layout_export_glavni = new QVBoxLayout(&gradesWindow);
+    gradesWindow.setLayout(layout_export_glavni);
 
     QCheckBox *checkBoxDa = nullptr;
     QCheckBox *checkBoxNe = nullptr;
 
     auto dodajEksportMaskeCheckBox = [&]() {
         QHBoxLayout *layout = new QHBoxLayout;
-        QWidget *widget = new QWidget(&window); // Kontejner za checkbox i tekst
+        QWidget *widget = new QWidget(&mainWindow); // Kontejner za checkbox i tekst
         QVBoxLayout *innerLayout = new QVBoxLayout(widget); // Layout unutar kontejnera
 
         QLabel *label = new QLabel("Eksport maski:", widget);
@@ -1307,7 +1316,7 @@ int main(int argc, char *argv[]) {
 
     auto dodajEksportJsonCheckBox = [&]() {
         QHBoxLayout *layout = new QHBoxLayout;
-        QWidget *widget = new QWidget(&window); // Kontejner za checkbox i tekst
+        QWidget *widget = new QWidget(&mainWindow); // Kontejner za checkbox i tekst
         QVBoxLayout *innerLayout = new QVBoxLayout(widget); // Layout unutar kontejnera
 
         QLabel *label = new QLabel("Eksport .json file-a:", widget);
@@ -1344,7 +1353,7 @@ int main(int argc, char *argv[]) {
     dodajEksportJsonCheckBox();
 
     QObject::connect(patcheviExport, &QPushButton::clicked, [&]() {
-       prozorOdabirEksporta.show();
+       chooseExpWindow.show();
     });
 
     QObject::connect(eksportSvih, &QPushButton::clicked, [&]() {
@@ -1366,15 +1375,15 @@ int main(int argc, char *argv[]) {
         if(!spasi.empty())
         {
             std::vector<std::vector<int>> ocjene = {ocjene_d1, ocjene_d2, ocjene_d3, ocjene_d4, ocjene_d5, ocjene_rub, ocjene_podloga, ocjene_ispravno, ocjene_koza};
-            spasiPatcheve(spasi, &prozorOdabirEksporta, nazivi);
+            spasiPatcheve(spasi, &chooseExpWindow, nazivi);
             exportJson(slikeJson, nazivi, checkBoxDa, ocjene, checkBoxKolektivni);
 
         }
-        prozorOdabirEksporta.close();
+        chooseExpWindow.close();
     });
 
     QObject::connect(eksportPojedinih, &QPushButton::clicked, [&]() {
-        prozorOcjene.show();
+        gradesWindow.show();
     });
 
     /*QObject::connect(patcheviExport, &QPushButton::clicked, [&]() {
@@ -1383,7 +1392,7 @@ int main(int argc, char *argv[]) {
 
     auto dodajCheckBoxove = [&](const QString& tekst, QWidget* eksport) {
         QHBoxLayout *layout = new QHBoxLayout;
-        QWidget *widget = new QWidget(&window); // Kontejner za checkbox i tekst
+        QWidget *widget = new QWidget(&mainWindow); // Kontejner za checkbox i tekst
         QVBoxLayout *innerLayout = new QVBoxLayout(widget); // Layout unutar kontejnera
 
         QLabel *label = new QLabel(tekst + ":", widget);
@@ -1419,31 +1428,26 @@ int main(int argc, char *argv[]) {
     }
 
     QObject::connect(eksport, &QPushButton::clicked, [&]() {
-        eksportujPojedinePatcheve(&prozorOcjene, checkBoxDa, checkBoxNe, checkBoxKolektivni);
-        prozorOcjene.close();
-        prozorOdabirEksporta.close();
+        eksportujPojedinePatcheve(&gradesWindow, checkBoxDa, checkBoxNe, checkBoxKolektivni);
+        gradesWindow.close();
+        chooseExpWindow.close();
     });
 
-    QPushButton *spasi_sliku = new QPushButton("Spasi sliku", &prozorKrajAnotacija);
+    QPushButton *spasi_sliku = new QPushButton("Spasi sliku", &endAnnWindow);
     layout_kraj_anotacija->addWidget(spasi_sliku);
 
     QObject::connect(spasi_sliku, &QPushButton::clicked, [&]() {
         sveSlike.push_back(slika);
         std::vector<cv::Mat>& referenca_slike = sveSlike;
-        spasiSlike(referenca_slike, &window2, &window3);
+        spasiSlike(referenca_slike, &toolsWindow, &savedWindow);
     });
-
-
 
     // Dodavanje donjeg layout-a za dugmad
     QHBoxLayout *bottomLayout = new QHBoxLayout();
 
-
-
     // Dugme "Default" u donjem levom uglu
     QPushButton *defaultButton = new QPushButton("Default");
     bottomLayout->addWidget(defaultButton, 0, Qt::AlignLeft);
-
     bottomLayout->addStretch();
 
     // Dugme "Spasi" u donjem desnom uglu
@@ -1468,7 +1472,7 @@ int main(int argc, char *argv[]) {
         dimenzije[3] = vStrideEdit->text().toDouble();
 
         writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije, odstupanjeZaOcjenu1);
-        updateUI(markerButton1, markerButton2, markerButton3, markerButton4, markerButton8, markerButton5, markerButton6, gumica, textboxes);
+        updateUI(marker1, marker2, marker3, marker4, marker5, markerRub, markerPodloga, gumica, textboxes);
     });
 
 
@@ -1492,7 +1496,7 @@ int main(int argc, char *argv[]) {
         dozvoljenoOdstupanjeZaOcjenu1->setCurrentText(QString::number(defaultOdstupanje));
 
         writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije, odstupanjeZaOcjenu1);
-        updateUI(markerButton1, markerButton2, markerButton3, markerButton4, markerButton8, markerButton5, markerButton6, gumica, textboxes);
+        updateUI(marker1, marker2, marker3, marker4, marker5, markerRub, markerPodloga, gumica, textboxes);
 
     });
 
@@ -1501,16 +1505,14 @@ int main(int argc, char *argv[]) {
 
     // Dodaj QTabWidget u layout prozora za postavke
 
-
-
-    QPushButton *postavke = new QPushButton("Postavke", &window);
+    QPushButton *postavke = new QPushButton("Postavke", &mainWindow);
     layout->addWidget(postavke);
     QObject::connect(postavke, &QPushButton::clicked, [&]() {
-        prozorPostavke.show();
+        settingsWindow.show();
     });
 
 
-    QPushButton *krajPrograma = new QPushButton("Kraj sesije", &window2);
+    QPushButton *krajPrograma = new QPushButton("Kraj sesije", &toolsWindow);
     layout_kraj->addWidget(krajPrograma);
 
     QObject::connect(krajPrograma, &QPushButton::clicked, [&]() {
@@ -1521,9 +1523,7 @@ int main(int argc, char *argv[]) {
         cv::destroyAllWindows();
     });
 
-
-
-    window.show();
+    mainWindow.show();
     cv::waitKey(0);
     return app.exec();
 }
