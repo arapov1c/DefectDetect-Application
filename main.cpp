@@ -502,121 +502,237 @@ std::vector<std::vector<int>> kreirajPatch(std::vector<QLineEdit*> textboxes, st
     return ocjene;
 }
 
-void exportJson(std::vector<std::vector<cv::Mat>>& slike, std::vector<QString> naziv, QCheckBox* includeMasks, std::vector<std::vector<int>>& ocjene) {
-    QJsonObject root;
+void exportJson(std::vector<std::vector<cv::Mat>>& slike, std::vector<QString> naziv,
+                QCheckBox* includeMasks, std::vector<std::vector<int>>& ocjene, QCheckBox* kolektivni) {
 
-    // 1. org_patchevi sekcija
-    QJsonArray orgPatchesArray;
-    for(int j=0; j < slike[0].size(); j++){
-        QJsonObject patch;
-        patch["file_name"] = imeSlike + "_" + QString("Patch%1").arg(QString::number(j + 1).rightJustified(4, '0')) + "_" + naziv[0];
-        patch["id"] = QString("%1").arg(QString::number(j + 1).rightJustified(4, '0'));
-        patch["height"] = dimenzije[1];
-        patch["width"] = dimenzije[0];
-        patch["x_koor"] = koordinate[j][0];
-        patch["y_koor"] = koordinate[j][1];
+    if(kolektivni && kolektivni->isChecked()){
+        QJsonObject root;
 
-        orgPatchesArray.append(patch);
+        // 1. org_patchevi sekcija
+        QJsonArray orgPatchesArray;
+        for(int j=0; j < slike[0].size(); j++){
+            QJsonObject patch;
+            patch["file_name"] = imeSlike + "_" + QString("Patch%1").arg(QString::number(j + 1).rightJustified(4, '0')) + "_" + naziv[0];
+            patch["id"] = QString("%1").arg(QString::number(j + 1).rightJustified(4, '0'));
+            patch["height"] = dimenzije[1];
+            patch["width"] = dimenzije[0];
+            patch["x_koor"] = koordinate[j][0];
+            patch["y_koor"] = koordinate[j][1];
 
-    }
-    root["org_patches"] = orgPatchesArray;
+            orgPatchesArray.append(patch);
 
-    // 2. klase sekcija
-    std::vector<QString> naziv_klase = naziviUAplikaciji;
-    naziv_klase.erase(naziv_klase.begin() + 5); //brisanje gumice iz vektora naziva klasa
-    QJsonArray klaseArray;
-    for (int i = 0; i < 9; ++i) {
-        QJsonObject klasa;
-        klasa["class_id"] = i;
-        klasa["name"] = naziv_klase[i];
-        klaseArray.append(klasa);
-    }
-    root["classes"] = klaseArray;
+        }
+        root["org_patches"] = orgPatchesArray;
 
-    // 3. annotation sekcija
-    QJsonArray annotationArray;
-    for (int i = 0; i < slike[0].size(); ++i) {
-        QJsonObject annotation;
-        annotation["id"] = QString("Ann-%1").arg(i);
-        annotation["patch_id"] = QString("%1").arg(QString::number(i + 1).rightJustified(4, '0'));
+        // 2. klase sekcija
+        std::vector<QString> naziv_klase = naziviUAplikaciji;
+        naziv_klase.erase(naziv_klase.begin() + 5); //brisanje gumice iz vektora naziva klasa
+        QJsonArray klaseArray;
+        for (int i = 0; i < 9; ++i) {
+            QJsonObject klasa;
+            klasa["class_id"] = i;
+            klasa["name"] = naziv_klase[i];
+            klaseArray.append(klasa);
+        }
+        root["classes"] = klaseArray;
+
+        // 3. annotation sekcija
+        QJsonArray annotationArray;
+        for (int i = 0; i < slike[0].size(); ++i) {
+            QJsonObject annotation;
+            annotation["id"] = QString("Ann-%1").arg(i+1);
+            annotation["patch_id"] = QString("%1").arg(QString::number(i + 1).rightJustified(4, '0'));
+            if (includeMasks && includeMasks->isChecked()) {
+                QJsonArray maskIdsArray;
+                for (int j = 1; j <= 9; j++) {
+                    QString maskId = QString("%1 - mask %2").arg(j).arg(QString("%1").arg(QString::number(i + 1).rightJustified(4, '0')));
+                    maskIdsArray.append(maskId);
+                }
+                annotation["mask_ids"] = maskIdsArray;
+            }
+
+
+            // class_ocjene niz
+            QJsonArray classOcjeneArray;
+            classOcjeneArray.append(ocjene[0][i]);
+            classOcjeneArray.append(ocjene[1][i]);
+            classOcjeneArray.append(ocjene[2][i]);
+            classOcjeneArray.append(ocjene[3][i]);
+            classOcjeneArray.append(ocjene[4][i]);
+            classOcjeneArray.append(ocjene[5][i]);
+            classOcjeneArray.append(ocjene[6][i]);
+            classOcjeneArray.append(ocjene[7][i]);
+            classOcjeneArray.append(ocjene[8][i]);
+
+            annotation["class_ocjene_ids"] = classOcjeneArray;
+
+            annotationArray.append(annotation);
+        }
+        root["annotation"] = annotationArray;
+
+        // 4. masks sekcija (ako je potrebno)
         if (includeMasks && includeMasks->isChecked()) {
-            QJsonArray maskIdsArray;
-            for (int j = 1; j <= 9; j++) {
-                QString maskId = QString("%1 - mask %2").arg(j).arg(QString("%1").arg(QString::number(i + 1).rightJustified(4, '0')));
-                maskIdsArray.append(maskId);
+            QJsonArray masksArray;
+            for (int j = 1; j<slike.size(); j++){
+                for (int i = 0; i < slike[j].size(); i++) {
+                    QJsonObject mask;
+                    mask["file_name"] = imeSlike + "_" + QString("Patch%1").arg(QString::number(i + 1).rightJustified(4, '0')) + "_" + "Maska " + naziv[j];
+                    mask["id"] =  QString("%1 - mask %2").arg(j).arg(QString("%1")).arg(QString::number(i + 1).rightJustified(4, '0'));
+                    mask["patch_id"] = QString("%1").arg(QString::number(i + 1).rightJustified(4, '0'));
+                    mask["ocjena_id"] = QString::number(ocjene[j-1][i]);
+                    masksArray.append(mask);
+                }
             }
-            annotation["mask_ids"] = maskIdsArray;
+            root["masks"] = masksArray;
         }
 
+        QJsonArray ocjeneArray;
+        QJsonObject ocjena1;
+        ocjena1["ocjena_id"] = 0;
+        ocjena1["name"] = "Bez prisustva";
+        ocjeneArray.append(ocjena1);
 
-        // class_ocjene niz
-        QJsonArray classOcjeneArray;
-        classOcjeneArray.append(ocjene[0][i]);
-        classOcjeneArray.append(ocjene[1][i]);
-        classOcjeneArray.append(ocjene[2][i]);
-        classOcjeneArray.append(ocjene[3][i]);
-        classOcjeneArray.append(ocjene[4][i]);
-        classOcjeneArray.append(ocjene[5][i]);
-        classOcjeneArray.append(ocjene[6][i]);
-        classOcjeneArray.append(ocjene[7][i]);
-        classOcjeneArray.append(ocjene[8][i]);
+        QJsonObject ocjena2;
+        ocjena2["ocjena_id"] = 1;
+        ocjena2["name"] = "Djelimično prisustvo";
+        ocjeneArray.append(ocjena2);
 
-        annotation["class_ocjene_ids"] = classOcjeneArray;
+        QJsonObject ocjena3;
+        ocjena3["ocjena_id"] = 2;
+        ocjena3["name"] = "Potpuno prisustvo";
+        ocjeneArray.append(ocjena3);
 
-        annotationArray.append(annotation);
+        root["ocjene"] = ocjeneArray;
+
+        // Kreiramo JSON dokument
+        QJsonDocument jsonDoc(root);
+
+        // Određujemo putanju do fajla koristeći patchesRootDirectory
+        QString jsonFilePath = patchesRootDirectory + "/output.json";
+        // Zapišemo JSON dokument u fajl
+        QFile file(jsonFilePath);
+        if (file.open(QIODevice::WriteOnly)) {
+            file.write(jsonDoc.toJson(QJsonDocument::JsonFormat())); // Koristi Indented za leže čitanje
+            file.close();
+        } else {
+            qWarning("Could not open file for writing");
+        }
     }
-    root["annotation"] = annotationArray;
+    else {
+        // Kreiranje podfoldera "json" unutar glavnog direktorijuma
+        QString jsonFolderPath = patchesRootDirectory + "/json";
+        QDir().mkdir(jsonFolderPath);
 
-    // 4. masks sekcija (ako je potrebno)
-    if (includeMasks && includeMasks->isChecked()) {
-        QJsonArray masksArray;
-        for (int j = 1; j<slike.size(); j++){
-            for (int i = 0; i < slike[j].size(); i++) {
-                QJsonObject mask;
-                mask["file_name"] = imeSlike + "_" + QString("Patch%1").arg(QString::number(i + 1).rightJustified(4, '0')) + "_" + "Maska " + naziv[j];
-                mask["id"] =  QString("%1 - mask %2").arg(j).arg(QString("%1")).arg(QString::number(i + 1).rightJustified(4, '0'));
-                mask["patch_id"] = QString("%1").arg(QString::number(i + 1).rightJustified(4, '0'));
-                mask["ocjena_id"] = QString::number(ocjene[j-1][i]);
-                masksArray.append(mask);
+
+
+        // Petlja kroz sve patcheve
+        for (int i = 0; i < slike[0].size(); ++i) {
+            QJsonObject root;
+
+            // 1. org_patchevi sekcija (za ovaj patch)
+            QJsonArray orgPatchesArray;
+            QJsonObject patch;
+
+            patch["file_name"] = imeSlike + "_" + QString("Patch%1").arg(QString::number(i + 1).rightJustified(4, '0')) + "_" + naziv[0];
+            patch["id"] = QString("%1").arg(QString::number(i + 1).rightJustified(4, '0'));
+            patch["height"] = dimenzije[1];
+            patch["width"] = dimenzije[0];
+            patch["x_koor"] = koordinate[i][0];
+            patch["y_koor"] = koordinate[i][1];
+            orgPatchesArray.append(patch);
+            root["org_patches"] = orgPatchesArray;
+
+            // 2. klase sekcija
+            std::vector<QString> naziv_klase = naziviUAplikaciji;
+            naziv_klase.erase(naziv_klase.begin() + 5); //brisanje gumice iz vektora naziva klasa
+            QJsonArray klaseArray;
+            for (int j = 0; j < 9; ++j) {
+                QJsonObject klasa;
+                klasa["class_id"] = j;
+                klasa["name"] = naziv_klase[j];
+                klaseArray.append(klasa);
+            }
+            root["classes"] = klaseArray;
+
+            // 3. annotation sekcija (za ovaj patch)
+            QJsonObject annotation;
+            annotation["id"] = QString("Ann-%1").arg(i+1);
+            annotation["patch_id"] = QString("%1").arg(QString::number(i + 1).rightJustified(4, '0'));
+
+            if (includeMasks && includeMasks->isChecked()) {
+                QJsonArray maskIdsArray;
+                for (int j = 1; j <= 9; j++) {
+                    QString maskId = QString("%1 - mask %2").arg(j).arg(QString("%1").arg(QString::number(i + 1).rightJustified(4, '0')));
+                    maskIdsArray.append(maskId);
+                }
+                annotation["mask_ids"] = maskIdsArray;
+            }
+
+            // class_ocjene niz
+            QJsonArray classOcjeneArray;
+            for (int j = 0; j < 9; ++j) {
+                classOcjeneArray.append(ocjene[j][i]);
+            }
+            annotation["class_ocjene_ids"] = classOcjeneArray;
+
+            QJsonArray annotationArray;
+            annotationArray.append(annotation);
+            root["annotation"] = annotationArray;
+
+            // 4. masks sekcija (ako je potrebno)
+            if (includeMasks && includeMasks->isChecked()) {
+                QJsonArray masksArray;
+                for (int j = 1; j < slike.size(); j++) {
+                    QJsonObject mask;
+                    mask["file_name"] = imeSlike + "_" + QString("Patch%1").arg(QString::number(i + 1).rightJustified(4, '0')) + "_" + "Maska " + naziv[j];
+                    mask["id"] = QString("%1 - mask %2").arg(j).arg(QString("%1")).arg(QString::number(i + 1).rightJustified(4, '0'));
+                    mask["patch_id"] = QString("%1").arg(QString::number(i + 1).rightJustified(4, '0'));
+                    mask["ocjena_id"] = QString::number(ocjene[j - 1][i]);
+                    masksArray.append(mask);
+                }
+                root["masks"] = masksArray;
+            }
+
+            // Ocjene sekcija
+            QJsonArray ocjeneArray;
+            QJsonObject ocjena1;
+            ocjena1["ocjena_id"] = 0;
+            ocjena1["name"] = "Bez prisustva";
+            ocjeneArray.append(ocjena1);
+
+            QJsonObject ocjena2;
+            ocjena2["ocjena_id"] = 1;
+            ocjena2["name"] = "Djelimično prisustvo";
+            ocjeneArray.append(ocjena2);
+
+            QJsonObject ocjena3;
+            ocjena3["ocjena_id"] = 2;
+            ocjena3["name"] = "Potpuno prisustvo";
+            ocjeneArray.append(ocjena3);
+
+            root["ocjene"] = ocjeneArray;
+
+            // Kreiramo JSON dokument
+            QJsonDocument jsonDoc(root);
+
+            // Određujemo putanju do fajla koristeći patchesRootDirectory
+            QString jsonFileName = QString("output_%1.json").arg(QString::number(i + 1).rightJustified(4, '0'));
+            QString jsonFilePath = jsonFolderPath + "/" + jsonFileName;
+
+            // Zapišemo JSON dokument u fajl
+            QFile file(jsonFilePath);
+            if (file.open(QIODevice::WriteOnly)) {
+                file.write(jsonDoc.toJson(QJsonDocument::Indented)); // Koristi Indented za lakše čitanje
+                file.close();
+            } else {
+                qWarning("Could not open file for writing");
             }
         }
-        root["masks"] = masksArray;
-    }
 
-    QJsonArray ocjeneArray;
-    QJsonObject ocjena1;
-    ocjena1["ocjena_id"] = 0;
-    ocjena1["name"] = "Bez prisustva";
-    ocjeneArray.append(ocjena1);
-
-    QJsonObject ocjena2;
-    ocjena2["ocjena_id"] = 1;
-    ocjena2["name"] = "Djelimično prisustvo";
-    ocjeneArray.append(ocjena2);
-
-    QJsonObject ocjena3;
-    ocjena3["ocjena_id"] = 2;
-    ocjena3["name"] = "Potpuno prisustvo";
-    ocjeneArray.append(ocjena3);
-
-    root["ocjene"] = ocjeneArray;
-
-    // Kreiramo JSON dokument
-    QJsonDocument jsonDoc(root);
-
-    // Određujemo putanju do fajla koristeći patchesRootDirectory
-    QString jsonFilePath = patchesRootDirectory + "/output.json";
-    // Zapišemo JSON dokument u fajl
-    QFile file(jsonFilePath);
-    if (file.open(QIODevice::WriteOnly)) {
-        file.write(jsonDoc.toJson(QJsonDocument::JsonFormat())); // Koristi Indented za leže čitanje
-        file.close();
-    } else {
-        qWarning("Could not open file for writing");
     }
 }
 
-void eksportujPojedinePatcheve(QWidget* window6, QCheckBox* checkBoxDa, QCheckBox* checkBoxNe){
+void eksportujPojedinePatcheve(QWidget* window6, QCheckBox* checkBoxDa, QCheckBox* checkBoxNe, QCheckBox* checkBoxKolektivni){
     std::vector<std::vector<int>> trazene_ocjene(9, std::vector<int>(3, 3)), ocjene;
     for (int i=0; i<9; i++){
         for (int j=0; j<3; j++){
@@ -699,7 +815,7 @@ void eksportujPojedinePatcheve(QWidget* window6, QCheckBox* checkBoxDa, QCheckBo
     if(!spaseniPatchevi.empty()){
 
         spasiPatcheve(spaseni, window6, nazivi);
-        exportJson(slikeJson, nazivi, checkBoxDa, ocjene);
+        exportJson(slikeJson, nazivi, checkBoxDa, ocjene, checkBoxKolektivni);
     }
     spasi.clear();
 }
@@ -1186,6 +1302,47 @@ int main(int argc, char *argv[]) {
     // Pozovite funkciju
     dodajEksportMaskeCheckBox();
 
+    QCheckBox *checkBoxKolektivni = nullptr;
+    QCheckBox *checkBoxIndividualni = nullptr;
+
+    auto dodajEksportJsonCheckBox = [&]() {
+        QHBoxLayout *layout = new QHBoxLayout;
+        QWidget *widget = new QWidget(&window); // Kontejner za checkbox i tekst
+        QVBoxLayout *innerLayout = new QVBoxLayout(widget); // Layout unutar kontejnera
+
+        QLabel *label = new QLabel("Eksport .json file-a:", widget);
+        label->setAlignment(Qt::AlignLeft);
+        innerLayout->addWidget(label);
+
+        QHBoxLayout *checkboxLayout = new QHBoxLayout;
+        checkBoxKolektivni = new QCheckBox("Kolektivni", widget);
+        checkBoxIndividualni = new QCheckBox("Individualni", widget);
+
+        checkBoxKolektivni->setChecked(true);
+
+        QObject::connect(checkBoxKolektivni, &QCheckBox::toggled, [checkBoxIndividualni](bool checked){
+            if (checked) {
+                checkBoxIndividualni->setChecked(false);
+            }
+        });
+
+        QObject::connect(checkBoxIndividualni, &QCheckBox::toggled, [checkBoxKolektivni](bool checked){
+            if (checked) {
+                checkBoxKolektivni->setChecked(false);
+            }
+        });
+
+        checkboxLayout->addWidget(checkBoxKolektivni);
+        checkboxLayout->addWidget(checkBoxIndividualni);
+
+        innerLayout->addLayout(checkboxLayout);
+        layout->addWidget(widget);
+        layout_odabir_eksporta->addLayout(layout);
+    };
+
+    // Pozovite funkciju
+    dodajEksportJsonCheckBox();
+
     QObject::connect(patcheviExport, &QPushButton::clicked, [&]() {
        prozorOdabirEksporta.show();
     });
@@ -1210,7 +1367,7 @@ int main(int argc, char *argv[]) {
         {
             std::vector<std::vector<int>> ocjene = {ocjene_d1, ocjene_d2, ocjene_d3, ocjene_d4, ocjene_d5, ocjene_rub, ocjene_podloga, ocjene_ispravno, ocjene_koza};
             spasiPatcheve(spasi, &prozorOdabirEksporta, nazivi);
-            exportJson(slikeJson, nazivi, checkBoxDa, ocjene);
+            exportJson(slikeJson, nazivi, checkBoxDa, ocjene, checkBoxKolektivni);
 
         }
         prozorOdabirEksporta.close();
@@ -1262,7 +1419,7 @@ int main(int argc, char *argv[]) {
     }
 
     QObject::connect(eksport, &QPushButton::clicked, [&]() {
-        eksportujPojedinePatcheve(&prozorOcjene, checkBoxDa, checkBoxNe);
+        eksportujPojedinePatcheve(&prozorOcjene, checkBoxDa, checkBoxNe, checkBoxKolektivni);
         prozorOcjene.close();
         prozorOdabirEksporta.close();
     });
