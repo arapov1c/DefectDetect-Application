@@ -1,0 +1,20 @@
+#Marker za anotacije
+velicinaMarkera=10
+
+#Svi nazivi se prikazuju u prozorima, kao i prilikom spašavanja slika
+nazivMarkera1=Defekt 1
+nazivMarkera2=Defekt 2
+nazivMarkera3=Defekt 3
+nazivMarkera4=Defekt 4
+nazivMarkera5=Defekt 5
+nazivGumice=Gumica
+nazivRuba=Rub
+nazivPodloge=Podloga
+nazivKlaseIspravno=Klasa ispravno
+nazivKlaseKoza=Koza
+
+#Defaultne vrijednosti za dimenzije i stride patcha
+x=300
+y=300
+sx=400
+sy=400

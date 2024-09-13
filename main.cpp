@@ -1019,12 +1019,12 @@ int main(int argc, char *argv[]) {
 
     markerThicknessComboBox->setCurrentText(QString::number(velicinaMarkera));
 
-    QComboBox *dozvoljenoOdstupanjeZaOcjenu1 = new QComboBox();
-    for (int i = 1; i <= 30; i += 1) {
-       dozvoljenoOdstupanjeZaOcjenu1->addItem(QString::number(i));
-    }
+    QLineEdit *dozvoljenoOdstupanjeZaOcjenu1 = new QLineEdit();
+    QIntValidator *validator = new QIntValidator(1, 100);  // Postavljamo minimum na 1 i maksimum na 100
+    dozvoljenoOdstupanjeZaOcjenu1->setValidator(validator);
 
-    dozvoljenoOdstupanjeZaOcjenu1->setCurrentText(QString::number(odstupanjeZaOcjenu1));
+    // Postavi inicijalnu vrednost
+    dozvoljenoOdstupanjeZaOcjenu1->setText(QString::number(odstupanjeZaOcjenu1));
 
     //POSTAVLJANJE DEBLJINE MARKERA
     QLabel *labelDebljina = new QLabel("Debljina:", &toolsWindow);
@@ -1041,7 +1041,14 @@ int main(int argc, char *argv[]) {
         writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije, odstupanjeZaOcjenu1);
     });
     ostaloLayout->addRow("Debljina Markera:", markerThicknessComboBox);
-    ostaloLayout->addRow("Odstupanje za ocjenu 1:", dozvoljenoOdstupanjeZaOcjenu1);
+    QLabel *label = new QLabel("Postavljanje odstupanja za dodjelu ocjene 1 patch-u.<br>"
+                               "Prilikom eksporta patcheva, ocjena 1 (djelimično oštećenje)<br>"
+                               "se dodjeljuje na osnovu odnosa broja anotiranih i neanotiranih piksela.<br>");
+    label->setWordWrap(true);  // Da osiguraš prelamanje linija kada je potrebno
+
+    ostaloLayout->addRow(label);
+    ostaloLayout->addRow("Odaberite ovaj odnos u procentima između 1 i 100.", dozvoljenoOdstupanjeZaOcjenu1);
+
 
     tabWidget->addTab(tabOstalo, "Ostalo");
 
@@ -1125,7 +1132,7 @@ int main(int argc, char *argv[]) {
         warningWindow.close();
     });
 
-    QPushButton *obrisiSve = new QPushButton("Obriši anotacije", &toolsWindow);
+    QPushButton *obrisiSve = new QPushButton("Obriši anotacije...", &toolsWindow);
     layout_kraj->addWidget(obrisiSve);
 
     QObject::connect(obrisiSve, &QPushButton::clicked, [&]() {
@@ -1140,7 +1147,7 @@ int main(int argc, char *argv[]) {
     QVBoxLayout *layout_kraj_anotacija = new QVBoxLayout(&endAnnWindow);
     endAnnWindow.setLayout(layout_kraj_anotacija);
 
-    QPushButton *krajAnotacije = new QPushButton("Završi anotiranje", &toolsWindow);
+    QPushButton *krajAnotacije = new QPushButton("Završi anotiranje...", &toolsWindow);
     layout_kraj->addWidget(krajAnotacije);
 
     std::vector<cv::Mat> maske;
@@ -1245,7 +1252,7 @@ int main(int argc, char *argv[]) {
         patchDimWindow.show();
     });
 
-    QPushButton *patcheviExport = new QPushButton("Eksportuj patcheve", &endAnnWindow);
+    QPushButton *patcheviExport = new QPushButton("Eksportuj patcheve...", &endAnnWindow);
     layout_kraj_anotacija->addWidget(patcheviExport);
 
 
@@ -1259,7 +1266,7 @@ int main(int argc, char *argv[]) {
     QPushButton *eksportSvih = new QPushButton("Eksportuj sve patcheve", &chooseExpWindow);
     layout_odabir_eksporta->addWidget(eksportSvih);
 
-    QPushButton *eksportPojedinih = new QPushButton("Eksportuj odabrane patcheve", &chooseExpWindow);
+    QPushButton *eksportPojedinih = new QPushButton("Eksportuj odabrane patcheve...", &chooseExpWindow);
     layout_odabir_eksporta->addWidget(eksportPojedinih);
 
     //PROZOR ZA EXPORT PATCHEVA PREKO OCJENA
@@ -1458,7 +1465,7 @@ int main(int argc, char *argv[]) {
     QObject::connect(spasiButton, &QPushButton::clicked, [&]() {
         // Prikupljanje vrednosti iz tabova i ažuriranje varijabli
         velicinaMarkera = markerThicknessComboBox->currentText().toInt();
-        odstupanjeZaOcjenu1 = dozvoljenoOdstupanjeZaOcjenu1->currentText().toInt();
+        odstupanjeZaOcjenu1 = dozvoljenoOdstupanjeZaOcjenu1->text().toInt();
 
         // Ažuriranje naziva markera
         for (int i=0; i<10; i++){
@@ -1493,7 +1500,7 @@ int main(int argc, char *argv[]) {
         }
         // Ažuriranje QComboBox-a u tabu "Ostalo"
         markerThicknessComboBox->setCurrentText(QString::number(defaultVelicinaMarkera));
-        dozvoljenoOdstupanjeZaOcjenu1->setCurrentText(QString::number(defaultOdstupanje));
+        dozvoljenoOdstupanjeZaOcjenu1->setText(QString::number(defaultOdstupanje));
 
         writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije, odstupanjeZaOcjenu1);
         updateUI(marker1, marker2, marker3, marker4, marker5, markerRub, markerPodloga, gumica, textboxes);
