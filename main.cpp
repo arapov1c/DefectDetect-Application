@@ -838,7 +838,7 @@ int main(int argc, char *argv[]) {
 
     QApplication app(argc, argv);
 
-    QString configFileName = "release/config.txt"; //PRILIKOM RELEASA APLIKACIJE UKINUTI OVO RELEASE IZ PUTANJE
+    QString configFileName = "config.txt"; //PRILIKOM RELEASA APLIKACIJE UKINUTI OVO RELEASE IZ PUTANJE
 
     // Čitanje konfiguracijskog fajla
     readConfig(configFileName);
@@ -1245,7 +1245,7 @@ int main(int argc, char *argv[]) {
         ocjene = kreirajPatch(textboxes, maske, &patchDimWindow);
     });
 
-    QPushButton *patcheviButton = new QPushButton("Izradi patcheve", &endAnnWindow);
+    QPushButton *patcheviButton = new QPushButton("Izradi patcheve...", &endAnnWindow);
     layout_kraj_anotacija->addWidget(patcheviButton);
 
     QObject::connect(patcheviButton, &QPushButton::clicked, [&]() {

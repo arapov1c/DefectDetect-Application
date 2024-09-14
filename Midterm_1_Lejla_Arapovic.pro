@@ -56,5 +56,6 @@ LIBS += C:\Users\Korisnik\Desktop\ETF\opencv-build\bin\libopencv_videoio490.dll
 #        -lopencv_features2d320  \
 #        -lopencv_calib3d320
 
+ICON = logo-mini.ico
 RESOURCES += \
-    resurs.qrc
+    resurs.qrc \

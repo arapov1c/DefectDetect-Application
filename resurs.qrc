@@ -14,6 +14,7 @@
         <file>srednji.png</file>
         <file>8.png</file>
         <file>logo-mini.png</file>
+        <file>logo-mini.ico</file>
     </qresource>
     <qresource prefix="/biblioteke">
         <file>libopencv_core490.dll</file>
