@@ -48,7 +48,7 @@ QString putanja, putanjaSpasene;
 std::vector<int> ocjene_d1, ocjene_d2, ocjene_d3, ocjene_d4, ocjene_d5, ocjene_rub, ocjene_podloga, ocjene_ispravno, ocjene_koza;
 std::vector<cv::Mat> sveSlike, patchevi, patchevi_d1, patchevi_d2, patchevi_d3, patchevi_d4, patchevi_d5, patchevi_rub, patchevi_podloga, patchevi_ispravno, patchevi_koza;
 QString imeSlike, directory, patchesRootDirectory;
-int defaultOdstupanje = 5;
+int defaultOdstupanje = 80;
 int odstupanjeZaOcjenu1 = defaultOdstupanje;
 std::vector<std::vector<int>> koordinate;
 
