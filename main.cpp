@@ -48,7 +48,7 @@ QString putanja, putanjaSpasene;
 std::vector<int> ocjene_d1, ocjene_d2, ocjene_d3, ocjene_d4, ocjene_d5, ocjene_rub, ocjene_podloga, ocjene_ispravno, ocjene_koza;
 std::vector<cv::Mat> sveSlike, patchevi, patchevi_d1, patchevi_d2, patchevi_d3, patchevi_d4, patchevi_d5, patchevi_rub, patchevi_podloga, patchevi_ispravno, patchevi_koza;
 QString imeSlike, directory, patchesRootDirectory;
-int defaultOdstupanje = 70;
+int defaultOdstupanje = 95;
 int odstupanjeZaOcjenu1 = defaultOdstupanje;
 std::vector<std::vector<int>> koordinate;
 
@@ -571,7 +571,7 @@ void exportJson(std::vector<std::vector<cv::Mat>>& slike, std::vector<QString> n
             for (int j = 1; j<slike.size(); j++){
                 for (int i = 0; i < slike[j].size(); i++) {
                     QJsonObject mask;
-                    mask["file_name"] = imeSlike + "_" + QString("Patch%1").arg(QString::number(i + 1).rightJustified(4, '0')) + "_" + "Maska " + naziv[j];
+                    mask["file_name"] = imeSlike + "_" + QString("Patch%1").arg(QString::number(i + 1).rightJustified(4, '0')) + "_" + naziv[j];
                     mask["id"] =  QString("%1 - mask %2").arg(j).arg(QString("%1")).arg(QString::number(i + 1).rightJustified(4, '0'));
                     mask["patch_id"] = QString("%1").arg(QString::number(i + 1).rightJustified(4, '0'));
                     mask["ocjena_id"] = QString::number(ocjene[j-1][i]);
