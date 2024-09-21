@@ -48,7 +48,7 @@ QString putanja, putanjaSpasene;
 std::vector<int> ocjene_d1, ocjene_d2, ocjene_d3, ocjene_d4, ocjene_d5, ocjene_rub, ocjene_podloga, ocjene_ispravno, ocjene_koza;
 std::vector<cv::Mat> sveSlike, patchevi, patchevi_d1, patchevi_d2, patchevi_d3, patchevi_d4, patchevi_d5, patchevi_rub, patchevi_podloga, patchevi_ispravno, patchevi_koza;
 QString imeSlike, directory, patchesRootDirectory;
-int defaultOdstupanje = 80;
+int defaultOdstupanje = 70;
 int odstupanjeZaOcjenu1 = defaultOdstupanje;
 std::vector<std::vector<int>> koordinate;
 
@@ -427,11 +427,11 @@ std::vector<cv::Mat> kreirajMaske(){
 int dajOcjenu(cv::Mat patch){
     int broj_bijelih = cv::countNonZero(patch);
     int broj_crnih = patch.total() - broj_bijelih;
-    //std::cout<<"bijeli"<<broj_bijelih<<" crni"<<broj_crnih<<std::endl<<"ukupno"<<patch.total()<<" provjera"<<odstupanjeZaOcjenu1*0.01*patch.total()<<std::endl;
-    if(broj_bijelih<odstupanjeZaOcjenu1*0.01*patch.total()){
+    std::cout<<"bijeli"<<broj_bijelih<<" crni"<<broj_crnih<<std::endl<<"ukupno"<<patch.total()<<" provjera1 "<<odstupanjeZaOcjenu1*0.01*patch.total()<<" provjera2 "<<patch.total() - odstupanjeZaOcjenu1*0.01*patch.total()<<std::endl;
+    if(broj_bijelih<=patch.total() - odstupanjeZaOcjenu1*0.01*patch.total()){
         return 0;
     }
-    else if(broj_crnih<odstupanjeZaOcjenu1*0.01*patch.total()){
+    else if(broj_bijelih>odstupanjeZaOcjenu1*0.01*patch.total()){
         return 2;
     }
     else
