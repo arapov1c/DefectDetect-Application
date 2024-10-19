@@ -41,8 +41,8 @@ std::vector<double> defaultDimenzije = {200,200,50,50};
 std::vector<double> dimenzije = defaultDimenzije;
 std::vector<int> indeksi, spasi;
 std::vector<std::vector<QCheckBox*>> checkboxes;
-std::vector<QString> defaultNaziviUAplikaciji = {"Defekt 1", "Defekt 2", "Defekt 3", "Defekt 4", "Defekt 5", "Gumica",
-                                                 "Rub", "Podloga", "Klasa ispravno", "Koza"};
+std::vector<QString> defaultNaziviUAplikaciji = {"Defect 1", "Defect 2", "Defect 3", "Defect 4", "Defect 5", "Eraser",
+                                                 "Edge", "Surface", "Class Correct", "Leather"};
 std::vector<QString> naziviUAplikaciji = defaultNaziviUAplikaciji;
 QString putanja, putanjaSpasene;
 std::vector<int> ocjene_d1, ocjene_d2, ocjene_d3, ocjene_d4, ocjene_d5, ocjene_rub, ocjene_podloga, ocjene_ispravno, ocjene_koza;
@@ -74,7 +74,7 @@ void readConfig(const QString &fileName) {
         QString key = parts.at(0).trimmed();
         QString value = parts.at(1).trimmed();
 
-        if (key == "velicinaMarkera") {
+        if (key == "MarkerThickness") {
             velicinaMarkera = value.toInt();
         }
         else if(key == "x"){
@@ -89,37 +89,37 @@ void readConfig(const QString &fileName) {
         else if(key == "sy"){
             dimenzije[3] = value.toInt();
         }
-        else if(key=="nazivMarkera1"){
+        else if(key=="Marker1Name"){
             naziviUAplikaciji[0] = value;
         }
-        else if(key=="nazivMarkera2"){
+        else if(key=="Marker2Name"){
             naziviUAplikaciji[1] = value;
         }
-        else if(key=="nazivMarkera3"){
+        else if(key=="Marker3Name"){
             naziviUAplikaciji[2] = value;
         }
-        else if(key=="nazivMarkera4"){
+        else if(key=="Marker4Name"){
             naziviUAplikaciji[3] = value;
         }
-        else if(key=="nazivMarkera5"){
+        else if(key=="Marker5Name"){
             naziviUAplikaciji[4] = value;
         }
-        else if(key=="nazivGumice"){
+        else if(key=="EraserName"){
             naziviUAplikaciji[5] = value;
         }
-        else if(key=="nazivRuba"){
+        else if(key=="EdgeName"){
             naziviUAplikaciji[6] = value;
         }
-        else if(key=="nazivPodloge"){
+        else if(key=="SurfaceName"){
             naziviUAplikaciji[7] = value;
         }
-        else if(key=="nazivKlaseIspravno"){
+        else if(key=="ClassCorrectName"){
             naziviUAplikaciji[8] = value;
         }
-        else if(key=="nazivKlaseKoza"){
+        else if(key=="ClassLeatherName"){
             naziviUAplikaciji[9] = value;
         }
-        else if(key=="odstupanjeZaOcjenu1"){
+        else if(key=="Rating1Tolerance"){
             odstupanjeZaOcjenu1 = value.toInt();
         }
 
@@ -138,7 +138,7 @@ void writeConfig(const QString &fileName, int velicinaMarkera, const std::vector
     QTextStream out(&file);
 
     // Upisivanje svih vrednosti u fajl
-    out << "velicinaMarkera=" << velicinaMarkera << "\n";
+    out << "MarkerThickness=" << velicinaMarkera << "\n";
 
     // Pretpostavljamo da su dimenzije i nazivi uvek iste dužine kao u readConfig
     out << "x=" << dimenzije[0] << "\n";
@@ -146,18 +146,18 @@ void writeConfig(const QString &fileName, int velicinaMarkera, const std::vector
     out << "sx=" << dimenzije[2] << "\n";
     out << "sy=" << dimenzije[3] << "\n";
 
-    out << "nazivMarkera1=" << nazivi[0] << "\n";
-    out << "nazivMarkera2=" << nazivi[1] << "\n";
-    out << "nazivMarkera3=" << nazivi[2] << "\n";
-    out << "nazivMarkera4=" << nazivi[3] << "\n";
-    out << "nazivMarkera5=" << nazivi[4] << "\n";
-    out << "nazivGumice=" << nazivi[5] << "\n";
-    out << "nazivRuba=" << nazivi[6] << "\n";
-    out << "nazivPodloge=" << nazivi[7] << "\n";
-    out << "nazivKlaseIspravno=" << nazivi[8] << "\n";
-    out << "nazivKlaseKoza=" << nazivi[9] << "\n";
+    out << "Marker1Name=" << nazivi[0] << "\n";
+    out << "Marker2Name=" << nazivi[1] << "\n";
+    out << "Marker3Name=" << nazivi[2] << "\n";
+    out << "Marker4Name=" << nazivi[3] << "\n";
+    out << "Marker5Name=" << nazivi[4] << "\n";
+    out << "EraserName=" << nazivi[5] << "\n";
+    out << "EdgeName=" << nazivi[6] << "\n";
+    out << "SurfaceName=" << nazivi[7] << "\n";
+    out << "ClassCorrectName=" << nazivi[8] << "\n";
+    out << "ClasssLeatherName=" << nazivi[9] << "\n";
 
-    out << "odstupanjeZaOcjenu1=" << odstupanjeZaOcjenu1 << "\n";
+    out << "Rating1Tolerance=" << odstupanjeZaOcjenu1 << "\n";
 
 
     file.close();
@@ -166,18 +166,18 @@ void writeConfig(const QString &fileName, int velicinaMarkera, const std::vector
 void spasiSlike(std::vector<cv::Mat>& slike, QWidget* window2, QWidget* window3) {
     QFileInfo fileInfo(putanja);
     imeSlike = fileInfo.baseName();
-    std::vector<std::string> naziviFoldera = {"Original", "Maske", "Maske", "Maske", "Maske", "Maske", "Maske", "Maske", "Maske", "Maske", "Anotacija"};
+    std::vector<std::string> naziviFoldera = {"Original", "Masks", "Masks", "Masks", "Masks", "Masks", "Masks", "Masks", "Masks", "Masks", "Annotation"};
     std::vector<std::string> naziviSlika = {imeSlike.toStdString(), naziviUAplikaciji[0].toStdString(), naziviUAplikaciji[1].toStdString(),
                                             naziviUAplikaciji[2].toStdString(), naziviUAplikaciji[3].toStdString(), naziviUAplikaciji[4].toStdString(),
                                             naziviUAplikaciji[6].toStdString(), naziviUAplikaciji[7].toStdString(), naziviUAplikaciji[8].toStdString(), naziviUAplikaciji[9].toStdString(), "Anotacija_"+imeSlike.toStdString()};
 
     // Odabir glavnog foldera
-    QString glavniFolder = QFileDialog::getExistingDirectory(window2, "Odaberi glavni direktorij za spašavanje", QDir::currentPath());
+    QString glavniFolder = QFileDialog::getExistingDirectory(window2, "Choose main directory", QDir::currentPath());
     if (glavniFolder.isEmpty()) {
         return;  // Ako korisnik nije odabrao glavni folder, prekidamo postupak
     }
 
-    QString rezultatiFolder = glavniFolder + "/Rezultati_" + imeSlike;
+    QString rezultatiFolder = glavniFolder + "/Results_" + imeSlike;
     QDir dir(rezultatiFolder);
     if (!dir.exists()) {
         dir.mkpath(rezultatiFolder);
@@ -223,16 +223,16 @@ void onMouseClick(int event, int x, int y, int flags, void* userData) {
     } else if (event == cv::EVENT_MOUSEMOVE && (flags & cv::EVENT_FLAG_ALTKEY) && crtanjeAktivno) {
         cv::line(*trenutnaSlika, prethodnaTacka, cv::Point(x, y), boja, velicinaMarkera);
         prethodnaTacka = cv::Point(x, y);
-        cv::imshow("Glavni pregled", *trenutnaSlika);
+        cv::imshow("Main View", *trenutnaSlika);
     } else if (event == cv::EVENT_MOUSEMOVE && (flags & cv::EVENT_FLAG_ALTKEY) && !crtanjeAktivno) { //Implementacija gumice tako što se kopira original preko
         kopirajDioSlike(originalnaSlika, *trenutnaSlika, x, y, velicinaMarkera);                       //anotirane slike
-        cv::imshow("Glavni pregled", *trenutnaSlika);
+        cv::imshow("Main View", *trenutnaSlika);
     }
 }
 
 void onButtonClick(QWidget* window, QWidget* window2, int odabir) {
     if(odabir==1){
-        QString filePath = QFileDialog::getOpenFileName(window, "Odaberi sliku", "", "Slike (*.png *.jpg *.jpeg *.bmp)");
+        QString filePath = QFileDialog::getOpenFileName(window, "Choose image", "", "Images (*.png *.jpg *.jpeg *.bmp)");
         putanja = filePath;
 
         if (!filePath.isEmpty()) {
@@ -245,13 +245,13 @@ void onButtonClick(QWidget* window, QWidget* window2, int odabir) {
         else return;
     }
     else if(odabir==2){
-        QString folderPath = QFileDialog::getExistingDirectory(window, "Učitaj sesiju", "");
+        QString folderPath = QFileDialog::getExistingDirectory(window, "Load session", "");
         if (!folderPath.isEmpty()) {
             sveSlike.clear();
             std::string baseFolder = folderPath.toStdString();
 
             // Putanje do foldera Anotacije i Original
-            std::string folderAnotacije = baseFolder + "/Anotacija";
+            std::string folderAnotacije = baseFolder + "/Annoatation";
             std::string folderOriginal = baseFolder + "/Original";
 
             // Učitavanje slika iz foldera Anotacije
@@ -285,10 +285,10 @@ void onButtonClick(QWidget* window, QWidget* window2, int odabir) {
             return;
         }
     }
-    cv::namedWindow("Glavni pregled", cv::WINDOW_NORMAL);
-    cv::resizeWindow("Glavni pregled", 800, 600);
-    cv::imshow("Glavni pregled", slika);
-    cv::setMouseCallback("Glavni pregled", onMouseClick, &slika);
+    cv::namedWindow("Main View", cv::WINDOW_NORMAL);
+    cv::resizeWindow("Main View", 800, 600);
+    cv::imshow("Main View", slika);
+    cv::setMouseCallback("Main View", onMouseClick, &slika);
 
     // Prikaz alatne trake
     window2->show();
@@ -327,14 +327,14 @@ void onMarkerClick(int markerId){
 }
 
 void spasiPatcheve(std::vector<std::vector<cv::Mat>>& slike, QWidget* window6, std::vector<QString> naziv) {
-    directory = QFileDialog::getExistingDirectory(window6, "Odaberi direktorij za spašavanje", QDir::currentPath());
+    directory = QFileDialog::getExistingDirectory(window6, "Choose directory", QDir::currentPath());
     if (directory.isEmpty()) {
         return;  // Ako korisnik nije odabrao direktorij, prekidamo postupak
     }
 
     QFileInfo fileInfo(putanja);
     imeSlike = fileInfo.baseName();
-    patchesRootDirectory = QDir(directory).filePath("Patchevi_" + imeSlike);
+    patchesRootDirectory = QDir(directory).filePath("Patches_" + imeSlike);
     std::cout<<patchesRootDirectory.toStdString()<<std::endl;
     QStringList supportedFormats = {"BMP (*.bmp)", "JPEG (*.jpg *.jpeg)", "PNG (*.png)"};
     QString selectedFilter = "BMP (*.bmp)";  // Defaultni format
@@ -345,7 +345,7 @@ void spasiPatcheve(std::vector<std::vector<cv::Mat>>& slike, QWidget* window6, s
         if (!slike[i].empty()) {  
             QString defaultFileName;
             // Kreiramo poddirektorij za spašavanje patcheva
-            QString patchesDirectoryName = "Patchevi_" + imeSlike + "_" + naziv[i];
+            QString patchesDirectoryName = "Patches_" + imeSlike + "_" + naziv[i];
             QString patchesDirectoryPath = QDir(patchesRootDirectory).filePath(patchesDirectoryName);
 
             // Kreiramo direktorij ako ne postoji
@@ -490,9 +490,9 @@ std::vector<std::vector<int>> kreirajPatch(std::vector<QLineEdit*> textboxes, st
         }
     }
 
-    cv::namedWindow("Prikaz patcheva", cv::WINDOW_NORMAL);
-    cv::resizeWindow("Prikaz patcheva", 800, 600);
-    cv::imshow("Prikaz patcheva", slikaSaPatchevima);
+    cv::namedWindow("Patches view", cv::WINDOW_NORMAL);
+    cv::resizeWindow("Patches view", 800, 600);
+    cv::imshow("Patches view", slikaSaPatchevima);
     std::vector<std::vector<int>> ocjene = {ocjene_d1, ocjene_d2, ocjene_d3, ocjene_d4, ocjene_d5, ocjene_rub, ocjene_podloga, ocjene_ispravno, ocjene_koza};
     return ocjene;
 }
@@ -559,7 +559,7 @@ void exportJson(std::vector<std::vector<cv::Mat>>& slike, std::vector<QString> n
             classOcjeneArray.append(ocjene[7][i]);
             classOcjeneArray.append(ocjene[8][i]);
 
-            annotation["class_ocjene_ids"] = classOcjeneArray;
+            annotation["class_ratings_ids"] = classOcjeneArray;
 
             annotationArray.append(annotation);
         }
@@ -574,7 +574,7 @@ void exportJson(std::vector<std::vector<cv::Mat>>& slike, std::vector<QString> n
                     mask["file_name"] = imeSlike + "_" + QString("Patch%1").arg(QString::number(i + 1).rightJustified(4, '0')) + "_" + naziv[j];
                     mask["id"] =  QString("%1 - mask %2").arg(j).arg(QString("%1")).arg(QString::number(i + 1).rightJustified(4, '0'));
                     mask["patch_id"] = QString("%1").arg(QString::number(i + 1).rightJustified(4, '0'));
-                    mask["ocjena_id"] = QString::number(ocjene[j-1][i]);
+                    mask["rating_id"] = QString::number(ocjene[j-1][i]);
                     masksArray.append(mask);
                 }
             }
@@ -583,21 +583,21 @@ void exportJson(std::vector<std::vector<cv::Mat>>& slike, std::vector<QString> n
 
         QJsonArray ocjeneArray;
         QJsonObject ocjena1;
-        ocjena1["ocjena_id"] = 0;
-        ocjena1["name"] = "Bez prisustva";
+        ocjena1["rating_id"] = 0;
+        ocjena1["name"] = "No presence";
         ocjeneArray.append(ocjena1);
 
         QJsonObject ocjena2;
         ocjena2["ocjena_id"] = 1;
-        ocjena2["name"] = "Djelimično prisustvo";
+        ocjena2["name"] = "Partial presence";
         ocjeneArray.append(ocjena2);
 
         QJsonObject ocjena3;
         ocjena3["ocjena_id"] = 2;
-        ocjena3["name"] = "Potpuno prisustvo";
+        ocjena3["name"] = "Full presence";
         ocjeneArray.append(ocjena3);
 
-        root["ocjene"] = ocjeneArray;
+        root["ratings"] = ocjeneArray;
 
         // Kreiramo JSON dokument
         QJsonDocument jsonDoc(root);
@@ -668,7 +668,7 @@ void exportJson(std::vector<std::vector<cv::Mat>>& slike, std::vector<QString> n
             for (int j = 0; j < 9; ++j) {
                 classOcjeneArray.append(ocjene[j][i]);
             }
-            annotation["class_ocjene_ids"] = classOcjeneArray;
+            annotation["class_ratings_ids"] = classOcjeneArray;
 
             QJsonArray annotationArray;
             annotationArray.append(annotation);
@@ -679,10 +679,10 @@ void exportJson(std::vector<std::vector<cv::Mat>>& slike, std::vector<QString> n
                 QJsonArray masksArray;
                 for (int j = 1; j < slike.size(); j++) {
                     QJsonObject mask;
-                    mask["file_name"] = imeSlike + "_" + QString("Patch%1").arg(QString::number(i + 1).rightJustified(4, '0')) + "_" + "Maska " + naziv[j];
+                    mask["file_name"] = imeSlike + "_" + QString("Patch%1").arg(QString::number(i + 1).rightJustified(4, '0')) + "_" + "Mask " + naziv[j];
                     mask["id"] = QString("%1 - mask %2").arg(j).arg(QString("%1")).arg(QString::number(i + 1).rightJustified(4, '0'));
                     mask["patch_id"] = QString("%1").arg(QString::number(i + 1).rightJustified(4, '0'));
-                    mask["ocjena_id"] = QString::number(ocjene[j - 1][i]);
+                    mask["rating_id"] = QString::number(ocjene[j - 1][i]);
                     masksArray.append(mask);
                 }
                 root["masks"] = masksArray;
@@ -692,20 +692,20 @@ void exportJson(std::vector<std::vector<cv::Mat>>& slike, std::vector<QString> n
             QJsonArray ocjeneArray;
             QJsonObject ocjena1;
             ocjena1["ocjena_id"] = 0;
-            ocjena1["name"] = "Bez prisustva";
+            ocjena1["name"] = "No presence";
             ocjeneArray.append(ocjena1);
 
             QJsonObject ocjena2;
             ocjena2["ocjena_id"] = 1;
-            ocjena2["name"] = "Djelimično prisustvo";
+            ocjena2["name"] = "Partial presence";
             ocjeneArray.append(ocjena2);
 
             QJsonObject ocjena3;
             ocjena3["ocjena_id"] = 2;
-            ocjena3["name"] = "Potpuno prisustvo";
+            ocjena3["name"] = "Full presence";
             ocjeneArray.append(ocjena3);
 
-            root["ocjene"] = ocjeneArray;
+            root["ratings"] = ocjeneArray;
 
             // Kreiramo JSON dokument
             QJsonDocument jsonDoc(root);
@@ -799,9 +799,9 @@ void eksportujPojedinePatcheve(QWidget* window6, QCheckBox* checkBoxDa, QCheckBo
     } else if (checkBoxDa && checkBoxDa->isChecked()) {
         spaseni = {spaseniPatchevi, spasenaMaskaD1, spasenaMaskaD2, spasenaMaskaD3, spasenaMaskaD4, spasenaMaskaD5,
                    spasenaMaskaRub, spasenaMaskaPodloga, spasenaMaskaIspravno, spasenaMaskaKoza};
-        nazivi = {"Original", "Maska "+naziviUAplikaciji[0], "Maska "+naziviUAplikaciji[1], "Maska "+naziviUAplikaciji[2],
-                  "Maska "+naziviUAplikaciji[3], "Maska "+naziviUAplikaciji[4], "Maska "+naziviUAplikaciji[6],
-                  "Maska "+naziviUAplikaciji[7], "Maska "+naziviUAplikaciji[8], "Maska "+naziviUAplikaciji[9]};
+        nazivi = {"Original", "Mask "+naziviUAplikaciji[0], "Mask "+naziviUAplikaciji[1], "Mask "+naziviUAplikaciji[2],
+                  "Mask "+naziviUAplikaciji[3], "Mask "+naziviUAplikaciji[4], "Mask "+naziviUAplikaciji[6],
+                  "Mask "+naziviUAplikaciji[7], "Mask "+naziviUAplikaciji[8], "Mask "+naziviUAplikaciji[9]};
     }
     slikeJson = spaseni;
     ocjene = {spasenaOcjenaD1, spasenaOcjenaD2, spasenaOcjenaD3, spasenaOcjenaD4, spasenaOcjenaD5, spasenaOcjenaRub, spasenaOcjenaPodloga,
@@ -861,13 +861,13 @@ int main(int argc, char *argv[]) {
     QVBoxLayout *layout_alatna_traka = new QVBoxLayout(&toolsWindow);
 
     //Kreiranje dugmeta za učitavanje slike
-    QPushButton *buttonOdabirSlike = new QPushButton("Odaberi sliku", &mainWindow);
+    QPushButton *buttonOdabirSlike = new QPushButton("Load Image", &mainWindow);
     layout->addWidget(buttonOdabirSlike);
     QObject::connect(buttonOdabirSlike, &QPushButton::clicked, [&]() {
         onButtonClick(&mainWindow, &toolsWindow,1);
     });
 
-    QPushButton *buttonUcitajSesiju = new QPushButton("Učitaj sesiju", &mainWindow);
+    QPushButton *buttonUcitajSesiju = new QPushButton("Load Session", &mainWindow);
     layout->addWidget(buttonUcitajSesiju);
     QObject::connect(buttonUcitajSesiju, &QPushButton::clicked, [&]() {
         onButtonClick(&mainWindow, &toolsWindow,2);
@@ -958,7 +958,7 @@ int main(int argc, char *argv[]) {
 
     //POSTAVKE
     QWidget settingsWindow;
-    settingsWindow.setWindowTitle("Postavke");
+    settingsWindow.setWindowTitle("Settings");
     settingsWindow.setWindowIcon(logoMini);
 
     QVBoxLayout *layout_postavke = new QVBoxLayout(&settingsWindow);
@@ -970,17 +970,17 @@ int main(int argc, char *argv[]) {
     // Prvi tab - Nazivi
     QWidget *tabNazivi = new QWidget();
     QFormLayout *naziviLayout = new QFormLayout(tabNazivi);
-    naziviLayout->addRow("Naziv Markera 1:", new QLineEdit(naziviUAplikaciji[0]));
-    naziviLayout->addRow("Naziv Markera 2:", new QLineEdit(naziviUAplikaciji[1]));
-    naziviLayout->addRow("Naziv Markera 3:", new QLineEdit(naziviUAplikaciji[2]));
-    naziviLayout->addRow("Naziv Markera 4:", new QLineEdit(naziviUAplikaciji[3]));
-    naziviLayout->addRow("Naziv Markera 5:", new QLineEdit(naziviUAplikaciji[4]));
-    naziviLayout->addRow("Naziv Gumice:", new QLineEdit(naziviUAplikaciji[5]));
-    naziviLayout->addRow("Naziv Ruba:", new QLineEdit(naziviUAplikaciji[6]));
-    naziviLayout->addRow("Naziv Podloge:", new QLineEdit(naziviUAplikaciji[7]));
-    naziviLayout->addRow("Naziv Klase Ispravno:", new QLineEdit(naziviUAplikaciji[8]));
-    naziviLayout->addRow("Naziv Klase Koža:", new QLineEdit(naziviUAplikaciji[9]));
-    tabWidget->addTab(tabNazivi, "Nazivi");
+    naziviLayout->addRow("Marker 1 name:", new QLineEdit(naziviUAplikaciji[0]));
+    naziviLayout->addRow("Marker 2 name:", new QLineEdit(naziviUAplikaciji[1]));
+    naziviLayout->addRow("Marker 3 name:", new QLineEdit(naziviUAplikaciji[2]));
+    naziviLayout->addRow("Marker 4 name:", new QLineEdit(naziviUAplikaciji[3]));
+    naziviLayout->addRow("Marker 5 name:", new QLineEdit(naziviUAplikaciji[4]));
+    naziviLayout->addRow("Eraser name:", new QLineEdit(naziviUAplikaciji[5]));
+    naziviLayout->addRow("Edge name:", new QLineEdit(naziviUAplikaciji[6]));
+    naziviLayout->addRow("Surface name:", new QLineEdit(naziviUAplikaciji[7]));
+    naziviLayout->addRow("Class Correct name:", new QLineEdit(naziviUAplikaciji[8]));
+    naziviLayout->addRow("Class Leather name:", new QLineEdit(naziviUAplikaciji[9]));
+    tabWidget->addTab(tabNazivi, "Names");
 
     // Drugi tab - Patchevi
     QWidget *tabPatchevi = new QWidget();
@@ -1000,12 +1000,12 @@ int main(int argc, char *argv[]) {
     hStrideEdit->setValidator(floatValidator);
     vStrideEdit->setValidator(floatValidator);
 
-    patcheviLayout->addRow("Širina:", sirinaEdit);
-    patcheviLayout->addRow("Visina:", visinaEdit);
-    patcheviLayout->addRow("Horizontalni stride:", hStrideEdit);
-    patcheviLayout->addRow("Vertikalni stride:", vStrideEdit);
+    patcheviLayout->addRow("Width:", sirinaEdit);
+    patcheviLayout->addRow("Height:", visinaEdit);
+    patcheviLayout->addRow("Horizontal stride:", hStrideEdit);
+    patcheviLayout->addRow("Vertical stride:", vStrideEdit);
 
-    tabWidget->addTab(tabPatchevi, "Patchevi");
+    tabWidget->addTab(tabPatchevi, "Patches");
 
     // Treći tab - Ostalo
     QWidget *tabOstalo = new QWidget();
@@ -1027,12 +1027,12 @@ int main(int argc, char *argv[]) {
     dozvoljenoOdstupanjeZaOcjenu1->setText(QString::number(odstupanjeZaOcjenu1));
 
     //POSTAVLJANJE DEBLJINE MARKERA
-    QLabel *labelDebljina = new QLabel("Debljina:", &toolsWindow);
+    QLabel *labelDebljina = new QLabel("Thickness:", &toolsWindow);
     markerLayout->addWidget(labelDebljina);
 
     QToolButton *debljina1 = new QToolButton(&toolsWindow);
     debljina1->setIcon(QIcon(":/ikonice/najtanji.png"));
-    debljina1->setToolTip("1");
+    debljina1->setToolTip("10");
     markerLayout->addWidget(debljina1);
 
     QObject::connect(debljina1, &QToolButton::clicked, [&]() {
@@ -1040,22 +1040,24 @@ int main(int argc, char *argv[]) {
         markerThicknessComboBox->setCurrentText(QString::number(velicinaMarkera));
         writeConfig(configFileName, velicinaMarkera, naziviUAplikaciji, dimenzije, odstupanjeZaOcjenu1);
     });
-    ostaloLayout->addRow("Debljina Markera:", markerThicknessComboBox);
-    QLabel *label = new QLabel("Postavljanje odstupanja za dodjelu ocjene 1 patch-u.<br>"
-                               "Prilikom eksporta patcheva, ocjena 1 (djelimično oštećenje)<br>"
-                               "se dodjeljuje na osnovu odnosa broja anotiranih i neanotiranih piksela.<br>");
+    ostaloLayout->addRow("Marker Thickness:", markerThicknessComboBox);
+    QLabel *label = new QLabel("Setting tolerance to assign rating 1 to patch.<br>"
+                               "This tolerance represents the percentage of the patch <br>"
+                               "covered by the annotation in relation to its surface.<br>"
+                               "It also limits the minimum presence of the annotation <br>"
+                               "for assigning a rating of 1.");
     label->setWordWrap(true);  // Da osiguraš prelamanje linija kada je potrebno
 
     ostaloLayout->addRow(label);
-    ostaloLayout->addRow("Odaberite ovaj odnos u procentima između 1 i 100.", dozvoljenoOdstupanjeZaOcjenu1);
+    ostaloLayout->addRow("Choose this ratio as a percentage between 1 and 100.", dozvoljenoOdstupanjeZaOcjenu1);
 
 
-    tabWidget->addTab(tabOstalo, "Ostalo");
+    tabWidget->addTab(tabOstalo, "Other");
 
 
     QToolButton *debljina2 = new QToolButton(&toolsWindow);
     debljina2->setIcon(QIcon(":/ikonice/srednji.png"));
-    debljina2->setToolTip("2");
+    debljina2->setToolTip("20");
     markerLayout->addWidget(debljina2);
 
     QObject::connect(debljina2, &QToolButton::clicked, [&]() {
@@ -1066,7 +1068,7 @@ int main(int argc, char *argv[]) {
 
     QToolButton *debljina3 = new QToolButton(&toolsWindow);
     debljina3->setIcon(QIcon(":/ikonice/najdeblji.png"));
-    debljina3->setToolTip("3");
+    debljina3->setToolTip("30");
     markerLayout->addWidget(debljina3);
 
     QObject::connect(debljina3, &QToolButton::clicked, [&]() {
@@ -1078,17 +1080,17 @@ int main(int argc, char *argv[]) {
     QHBoxLayout *layout_kraj = new QHBoxLayout;
     layout_alatna_traka->addLayout(layout_kraj);
     //PRIVREMENO UKLANJANJE ANOTACIJA
-    QPushButton *privremeniPregled = new QPushButton("Ukloni anotacije", &toolsWindow);
+    QPushButton *privremeniPregled = new QPushButton("Remove Annotations", &toolsWindow);
     layout_kraj->addWidget(privremeniPregled);
     toolsWindow.setLayout(layout_kraj);
 
     QObject::connect(privremeniPregled, &QPushButton::pressed, [&]() {
         //cv::Mat originalna_slika = cv::imread(putanja); //prikaz originala dok je dugme pritisnuto
-        cv::imshow("Glavni pregled", originalnaSlika);
+        cv::imshow("Main View", originalnaSlika);
     });
 
     QObject::connect(privremeniPregled, &QPushButton::released, [&]() {
-        cv::imshow("Glavni pregled", slika); // prikaz anotacija
+        cv::imshow("Main View", slika); // prikaz anotacija
     });
 
     /*----------------------------------------------------------------------------//
@@ -1106,33 +1108,33 @@ int main(int argc, char *argv[]) {
 
     //PROZOR UPOZORENJA ZA BRISANJE SVIH ANOTACIJA
     QWidget warningWindow;
-    warningWindow.setWindowTitle("Brisanje anotacija");
+    warningWindow.setWindowTitle("Deleting Annotations");
     warningWindow.setWindowIcon(logoMini);
 
     QVBoxLayout *layout_brisanje_anotacija = new QVBoxLayout(&warningWindow);
     warningWindow.setLayout(layout_brisanje_anotacija);
 
-    QLabel *warningLabel = new QLabel("Da li ste sigurni da želite obrisati sve anotacije?", &warningWindow);
+    QLabel *warningLabel = new QLabel("Are you sure you want to delete all annotations?", &warningWindow);
     warningLabel->setAlignment(Qt::AlignCenter); // Centriranje teksta
     layout_brisanje_anotacija->addWidget(warningLabel);
 
-    QPushButton *Da = new QPushButton("Da", &warningWindow);
+    QPushButton *Da = new QPushButton("Yes", &warningWindow);
     layout_brisanje_anotacija->addWidget(Da);
 
     QObject::connect(Da, &QPushButton::clicked, [&]() {
         slika = originalnaSlika.clone();
-        cv::imshow("Glavni pregled", slika);
+        cv::imshow("Main View", slika);
         warningWindow.close();
     });
 
-    QPushButton *Ne = new QPushButton("Ne", &warningWindow);
+    QPushButton *Ne = new QPushButton("No", &warningWindow);
     layout_brisanje_anotacija->addWidget(Ne);
 
     QObject::connect(Ne, &QPushButton::clicked, [&]() {
         warningWindow.close();
     });
 
-    QPushButton *obrisiSve = new QPushButton("Obriši anotacije...", &toolsWindow);
+    QPushButton *obrisiSve = new QPushButton("Delete Annotations...", &toolsWindow);
     layout_kraj->addWidget(obrisiSve);
 
     QObject::connect(obrisiSve, &QPushButton::clicked, [&]() {
@@ -1141,13 +1143,13 @@ int main(int argc, char *argv[]) {
 
     //BUTTON ZA OZNAKU KRAJA ANOTACIJE, KAKO BI SE MOGLE KREIRATI MASKE I PATCHEVI
     QWidget endAnnWindow;
-    endAnnWindow.setWindowTitle("Kraj anotacija");
+    endAnnWindow.setWindowTitle("End of annotating");
     endAnnWindow.setWindowIcon(logoMini);
 
     QVBoxLayout *layout_kraj_anotacija = new QVBoxLayout(&endAnnWindow);
     endAnnWindow.setLayout(layout_kraj_anotacija);
 
-    QPushButton *krajAnotacije = new QPushButton("Završi anotiranje...", &toolsWindow);
+    QPushButton *krajAnotacije = new QPushButton("End Annotation...", &toolsWindow);
     layout_kraj->addWidget(krajAnotacije);
 
     std::vector<cv::Mat> maske;
@@ -1184,7 +1186,7 @@ int main(int argc, char *argv[]) {
     });
 
 
-    QPushButton *prikazMaski = new QPushButton("Prikaži maske", &endAnnWindow);
+    QPushButton *prikazMaski = new QPushButton("Show Masks", &endAnnWindow);
     layout_kraj_anotacija->addWidget(prikazMaski);
 
     QObject::connect(prikazMaski, &QPushButton::clicked, [&]() {
@@ -1211,7 +1213,7 @@ int main(int argc, char *argv[]) {
 
     //PROZOR ZA UNOS DIMENZIJA PATCHA
     QWidget patchDimWindow;
-    patchDimWindow.setWindowTitle("Izrada patcheva");
+    patchDimWindow.setWindowTitle("Creating patches");
     patchDimWindow.setWindowIcon(logoMini);
 
     QVBoxLayout *layout_patchevi = new QVBoxLayout(&patchDimWindow);
@@ -1219,7 +1221,7 @@ int main(int argc, char *argv[]) {
 
     std::vector<QLineEdit*> textboxes;
     for (int i = 0; i < 4; ++i) {
-        std::vector<QString> nazivi = {"Širina patcha", "Visina patcha", "Horizonatlni stride", "Vertikalni stride"};
+        std::vector<QString> nazivi = {"Width", "Height", "Horizontal stride", "Vertical stride"};
         QString label_text =  nazivi[i] + ":";
         QLabel *label = new QLabel(label_text, &patchDimWindow);
         layout_patchevi->addWidget(label);
@@ -1237,7 +1239,7 @@ int main(int argc, char *argv[]) {
     std::vector<std::vector<int>> ocjene;
 
 
-    QPushButton *izradiPatch = new QPushButton("Izradi patcheve", &patchDimWindow);
+    QPushButton *izradiPatch = new QPushButton("Create", &patchDimWindow);
     layout_patchevi2->addWidget(izradiPatch);
 
 
@@ -1245,33 +1247,33 @@ int main(int argc, char *argv[]) {
         ocjene = kreirajPatch(textboxes, maske, &patchDimWindow);
     });
 
-    QPushButton *patcheviButton = new QPushButton("Izradi patcheve...", &endAnnWindow);
+    QPushButton *patcheviButton = new QPushButton("Create Patches...", &endAnnWindow);
     layout_kraj_anotacija->addWidget(patcheviButton);
 
     QObject::connect(patcheviButton, &QPushButton::clicked, [&]() {
         patchDimWindow.show();
     });
 
-    QPushButton *patcheviExport = new QPushButton("Eksportuj patcheve...", &endAnnWindow);
+    QPushButton *patcheviExport = new QPushButton("Export patches...", &endAnnWindow);
     layout_kraj_anotacija->addWidget(patcheviExport);
 
 
     QWidget chooseExpWindow;
-    chooseExpWindow.setWindowTitle("Odabir eksporta");
+    chooseExpWindow.setWindowTitle("Export type selection");
     chooseExpWindow.setWindowIcon(logoMini);
 
     QVBoxLayout *layout_odabir_eksporta = new QVBoxLayout(&chooseExpWindow);
     chooseExpWindow.setLayout(layout_odabir_eksporta);
 
-    QPushButton *eksportSvih = new QPushButton("Eksportuj sve patcheve", &chooseExpWindow);
+    QPushButton *eksportSvih = new QPushButton("Export all patches", &chooseExpWindow);
     layout_odabir_eksporta->addWidget(eksportSvih);
 
-    QPushButton *eksportPojedinih = new QPushButton("Eksportuj odabrane patcheve...", &chooseExpWindow);
+    QPushButton *eksportPojedinih = new QPushButton("Export selected patches...", &chooseExpWindow);
     layout_odabir_eksporta->addWidget(eksportPojedinih);
 
     //PROZOR ZA EXPORT PATCHEVA PREKO OCJENA
     QWidget gradesWindow;
-    gradesWindow.setWindowTitle("Eksport patcheva");
+    gradesWindow.setWindowTitle("Exporting patches");
     gradesWindow.setWindowIcon(logoMini);
 
     QVBoxLayout *layout_export_glavni = new QVBoxLayout(&gradesWindow);
@@ -1285,13 +1287,13 @@ int main(int argc, char *argv[]) {
         QWidget *widget = new QWidget(&mainWindow); // Kontejner za checkbox i tekst
         QVBoxLayout *innerLayout = new QVBoxLayout(widget); // Layout unutar kontejnera
 
-        QLabel *label = new QLabel("Eksport maski:", widget);
+        QLabel *label = new QLabel("Mask export:", widget);
         label->setAlignment(Qt::AlignLeft);
         innerLayout->addWidget(label);
 
         QHBoxLayout *checkboxLayout = new QHBoxLayout;
-        checkBoxDa = new QCheckBox("Da", widget);
-        checkBoxNe = new QCheckBox("Ne", widget);
+        checkBoxDa = new QCheckBox("Yes", widget);
+        checkBoxNe = new QCheckBox("No", widget);
 
         checkBoxDa->setChecked(true);
 
@@ -1326,13 +1328,13 @@ int main(int argc, char *argv[]) {
         QWidget *widget = new QWidget(&mainWindow); // Kontejner za checkbox i tekst
         QVBoxLayout *innerLayout = new QVBoxLayout(widget); // Layout unutar kontejnera
 
-        QLabel *label = new QLabel("Eksport .json file-a:", widget);
+        QLabel *label = new QLabel("JSON file export:", widget);
         label->setAlignment(Qt::AlignLeft);
         innerLayout->addWidget(label);
 
         QHBoxLayout *checkboxLayout = new QHBoxLayout;
-        checkBoxKolektivni = new QCheckBox("Kolektivni", widget);
-        checkBoxIndividualni = new QCheckBox("Individualni", widget);
+        checkBoxKolektivni = new QCheckBox("Collective", widget);
+        checkBoxIndividualni = new QCheckBox("Individual", widget);
 
         checkBoxKolektivni->setChecked(true);
 
@@ -1372,9 +1374,9 @@ int main(int argc, char *argv[]) {
         } else if (checkBoxDa && checkBoxDa->isChecked()) {
             spasi = {patchevi, patchevi_d1, patchevi_d2, patchevi_d3, patchevi_d4, patchevi_d5, patchevi_rub, patchevi_podloga,
                                                                    patchevi_ispravno, patchevi_koza};
-            nazivi = {"Original", "Maska "+naziviUAplikaciji[0], "Maska "+naziviUAplikaciji[1], "Maska "+naziviUAplikaciji[2],
-                      "Maska "+naziviUAplikaciji[3], "Maska "+naziviUAplikaciji[4], "Maska "+naziviUAplikaciji[6],
-                      "Maska "+naziviUAplikaciji[7], "Maska "+naziviUAplikaciji[8], "Maska "+naziviUAplikaciji[9]};
+            nazivi = {"Original", "Mask "+naziviUAplikaciji[0], "Mask "+naziviUAplikaciji[1], "Mask "+naziviUAplikaciji[2],
+                      "Mask "+naziviUAplikaciji[3], "Mask "+naziviUAplikaciji[4], "Mask "+naziviUAplikaciji[6],
+                      "Mask "+naziviUAplikaciji[7], "Mask "+naziviUAplikaciji[8], "Mask "+naziviUAplikaciji[9]};
         }
 
         std::vector<std::vector<cv::Mat>> slikeJson = spasi;
@@ -1422,13 +1424,13 @@ int main(int argc, char *argv[]) {
         layout_export_glavni->addWidget(eksport);
     };
 
-    QPushButton *eksport = new QPushButton("Eksportuj");
+    QPushButton *eksport = new QPushButton("Export");
 
-    std::vector<QString> tekstovi = {"Odaberite ocjene za "+naziviUAplikaciji[0], "Odaberite ocjene za "+naziviUAplikaciji[1],
-                                     "Odaberite ocjene za "+naziviUAplikaciji[2], "Odaberite ocjene za "+naziviUAplikaciji[3],
-                                     "Odaberite ocjene za "+naziviUAplikaciji[4], "Odaberite ocjene za "+naziviUAplikaciji[6],
-                                     "Odaberite ocjene za "+naziviUAplikaciji[7], "Odaberite ocjene za "+naziviUAplikaciji[8],
-                                     "Odaberite ocjene za "+naziviUAplikaciji[9]};
+    std::vector<QString> tekstovi = {"Choose ratings for "+naziviUAplikaciji[0], "Choose ratings for "+naziviUAplikaciji[1],
+                                     "Choose ratings for "+naziviUAplikaciji[2], "Choose ratings for "+naziviUAplikaciji[3],
+                                     "Choose ratings for "+naziviUAplikaciji[4], "Choose ratings for "+naziviUAplikaciji[6],
+                                     "Choose ratings for "+naziviUAplikaciji[7], "Choose ratings for "+naziviUAplikaciji[8],
+                                     "Choose ratings for "+naziviUAplikaciji[9]};
 
     for (int i=0; i<tekstovi.size(); i++){
         dodajCheckBoxove(tekstovi[i], eksport);
@@ -1440,7 +1442,7 @@ int main(int argc, char *argv[]) {
         chooseExpWindow.close();
     });
 
-    QPushButton *spasi_sliku = new QPushButton("Spasi sliku", &endAnnWindow);
+    QPushButton *spasi_sliku = new QPushButton("Save image", &endAnnWindow);
     layout_kraj_anotacija->addWidget(spasi_sliku);
 
     QObject::connect(spasi_sliku, &QPushButton::clicked, [&]() {
@@ -1458,7 +1460,7 @@ int main(int argc, char *argv[]) {
     bottomLayout->addStretch();
 
     // Dugme "Spasi" u donjem desnom uglu
-    QPushButton *spasiButton = new QPushButton("Spasi");
+    QPushButton *spasiButton = new QPushButton("Save");
     bottomLayout->addWidget(spasiButton, 0, Qt::AlignRight);
 
     // Povezivanje signala sa slotovima (ovde ćeš dodati šta treba da se desi)
@@ -1512,14 +1514,14 @@ int main(int argc, char *argv[]) {
 
     // Dodaj QTabWidget u layout prozora za postavke
 
-    QPushButton *postavke = new QPushButton("Postavke", &mainWindow);
+    QPushButton *postavke = new QPushButton("Settings", &mainWindow);
     layout->addWidget(postavke);
     QObject::connect(postavke, &QPushButton::clicked, [&]() {
         settingsWindow.show();
     });
 
 
-    QPushButton *krajPrograma = new QPushButton("Kraj sesije", &toolsWindow);
+    QPushButton *krajPrograma = new QPushButton("End Session", &toolsWindow);
     layout_kraj->addWidget(krajPrograma);
 
     QObject::connect(krajPrograma, &QPushButton::clicked, [&]() {
