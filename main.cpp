@@ -27,14 +27,16 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
-
-
+#include <QKeyEvent>
+#include <QObject>
+#include <QEvent>
 
 //globalne varijable koje se koriste u nekoliko funkcija, deklarisane ovako radi lakše manipulacije između funkcija
 cv::Mat slika, originalnaSlika;
 cv::Scalar boja;
 cv::Point prethodnaTacka(-1, -1);
 bool crtanjeAktivno = false;
+int trenutnaSlikaIndex=0;
 int defaultVelicinaMarkera = 20;
 int velicinaMarkera = defaultVelicinaMarkera, trenutniMarker = 1;
 std::vector<double> defaultDimenzije = {200,200,50,50};
@@ -51,6 +53,7 @@ QString imeSlike, directory, patchesRootDirectory;
 int defaultOdstupanje = 95;
 int odstupanjeZaOcjenu1 = defaultOdstupanje;
 std::vector<std::vector<int>> koordinate;
+QFileInfoList fileList;
 
 void readConfig(const QString &fileName) {
     QFile file(fileName);
@@ -230,6 +233,21 @@ void onMouseClick(int event, int x, int y, int flags, void* userData) {
     }
 }
 
+void loadImage(int index) {
+    if (index >= 0 && index < fileList.size()) {
+        QString imagePath = fileList[index].absoluteFilePath();
+        putanja = imagePath;
+        originalnaSlika = cv::imread(putanja.toStdString());
+        slika = originalnaSlika.clone();
+
+        cv::namedWindow("Main View", cv::WINDOW_NORMAL);
+        cv::resizeWindow("Main View", 800, 600);
+        cv::imshow("Main View", slika);
+        cv::setMouseCallback("Main View", onMouseClick, &slika);
+    }
+
+}
+
 void onButtonClick(QWidget* window, QWidget* window2, int odabir) {
     if(odabir==1){
         QString filePath = QFileDialog::getOpenFileName(window, "Choose image", "", "Images (*.png *.jpg *.jpeg *.bmp)");
@@ -285,10 +303,35 @@ void onButtonClick(QWidget* window, QWidget* window2, int odabir) {
             return;
         }
     }
-    cv::namedWindow("Main View", cv::WINDOW_NORMAL);
-    cv::resizeWindow("Main View", 800, 600);
-    cv::imshow("Main View", slika);
-    cv::setMouseCallback("Main View", onMouseClick, &slika);
+    else if(odabir==3){
+        // Otvaranje dijaloga za odabir foldera
+        QString folderSlika = QFileDialog::getExistingDirectory(window, "Choose folder", "");
+
+        if (!folderSlika.isEmpty()) {
+            sveSlike.clear();
+            trenutnaSlikaIndex = 0;
+
+            // Pronađi sve slike u folderu
+            QDir dir(folderSlika);
+            QStringList filters;
+            filters << "*.png" << "*.jpg" << "*.jpeg" << "*.bmp";  // Filtriraj slike po ekstenziji
+            dir.setNameFilters(filters);
+
+            fileList = dir.entryInfoList(QDir::Files);
+
+            // Provjera da li ima slika u folderu
+            if (!fileList.isEmpty()) {
+                loadImage(trenutnaSlikaIndex);
+            }
+        }
+    }
+
+    if(odabir!=3){
+        cv::namedWindow("Main View", cv::WINDOW_NORMAL);
+        cv::resizeWindow("Main View", 800, 600);
+        cv::imshow("Main View", slika);
+        cv::setMouseCallback("Main View", onMouseClick, &slika);
+    }
 
     // Prikaz alatne trake
     window2->show();
@@ -867,6 +910,13 @@ int main(int argc, char *argv[]) {
         onButtonClick(&mainWindow, &toolsWindow,1);
     });
 
+
+    QPushButton *buttonOdabirFoldera = new QPushButton("Load Multiple Images", &mainWindow);
+    layout->addWidget(buttonOdabirFoldera);
+    QObject::connect(buttonOdabirFoldera, &QPushButton::clicked, [&]() {
+        onButtonClick(&mainWindow, &toolsWindow,3);
+    });
+
     QPushButton *buttonUcitajSesiju = new QPushButton("Load Session", &mainWindow);
     layout->addWidget(buttonUcitajSesiju);
     QObject::connect(buttonUcitajSesiju, &QPushButton::clicked, [&]() {
@@ -955,6 +1005,7 @@ int main(int argc, char *argv[]) {
     QObject::connect(gumica, &QToolButton::clicked, [&]() {
         onMarkerClick(7);
     });
+
 
     //POSTAVKE
     QWidget settingsWindow;
@@ -1202,12 +1253,12 @@ int main(int argc, char *argv[]) {
 
     //PROZOR UPOZORENJE DA SU SLIKE SPAŠENE
     QWidget savedWindow;
-    savedWindow.setWindowTitle("Spašeno");
+    savedWindow.setWindowTitle("Saving");
     savedWindow.setWindowIcon(logoMini);
 
     QVBoxLayout *layout_spasiSlike = new QVBoxLayout(&savedWindow);
 
-    QLabel *savedLabel = new QLabel("Slika je spašena", &savedWindow);
+    QLabel *savedLabel = new QLabel("Image is saved.", &savedWindow);
     savedLabel->setAlignment(Qt::AlignCenter); // Centriranje teksta
     layout_spasiSlike->addWidget(savedLabel);
 
@@ -1531,6 +1582,34 @@ int main(int argc, char *argv[]) {
         }
         cv::destroyAllWindows();
     });
+
+    QHBoxLayout *layout_iteration = new QHBoxLayout;
+    layout_alatna_traka->addLayout(layout_iteration);
+
+    QToolButton *previous = new QToolButton(&toolsWindow);
+    previous->setText("Previous");
+    previous->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    layout_iteration->addWidget(previous);
+
+    QObject::connect(previous, &QToolButton::clicked, [&]() {
+        if (trenutnaSlikaIndex > 0) {
+            trenutnaSlikaIndex--;
+            loadImage(trenutnaSlikaIndex);
+        }
+    });
+
+    QToolButton *next = new QToolButton(&toolsWindow);
+    next->setText("Next");
+    next->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    layout_iteration->addWidget(next);
+
+    QObject::connect(next, &QToolButton::clicked, [&]() {
+        if (trenutnaSlikaIndex < fileList.size() - 1) {
+            trenutnaSlikaIndex++;
+            loadImage(trenutnaSlikaIndex);
+        }
+    });
+
 
     mainWindow.show();
     cv::waitKey(0);
