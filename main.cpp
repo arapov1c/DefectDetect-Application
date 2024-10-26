@@ -30,6 +30,8 @@
 #include <QKeyEvent>
 #include <QObject>
 #include <QEvent>
+#include <fstream>
+#include <filesystem>
 
 //globalne varijable koje se koriste u nekoliko funkcija, deklarisane ovako radi lakše manipulacije između funkcija
 cv::Mat slika, originalnaSlika;
@@ -39,8 +41,11 @@ bool crtanjeAktivno = false;
 int trenutnaSlikaIndex=0;
 int defaultVelicinaMarkera = 20;
 int velicinaMarkera = defaultVelicinaMarkera, trenutniMarker = 1;
+int width, height;
 std::vector<double> defaultDimenzije = {200,200,50,50};
 std::vector<double> dimenzije = defaultDimenzije;
+std::vector<double> trenutne_dimenzije;
+
 std::vector<int> indeksi, spasi;
 std::vector<std::vector<QCheckBox*>> checkboxes;
 std::vector<QString> defaultNaziviUAplikaciji = {"Defect 1", "Defect 2", "Defect 3", "Defect 4", "Defect 5", "Eraser",
@@ -240,6 +245,9 @@ void loadImage(int index) {
         originalnaSlika = cv::imread(putanja.toStdString());
         slika = originalnaSlika.clone();
 
+        width = originalnaSlika.cols;
+        height = originalnaSlika.rows;
+
         cv::namedWindow("Main View", cv::WINDOW_NORMAL);
         cv::resizeWindow("Main View", 800, 600);
         cv::imshow("Main View", slika);
@@ -259,6 +267,9 @@ void onButtonClick(QWidget* window, QWidget* window2, int odabir) {
             originalnaSlika = cv::imread(putanja.toStdString());
             sveSlike.push_back(originalnaSlika);
             slika = originalnaSlika.clone();
+
+            width = originalnaSlika.cols;
+            height = originalnaSlika.rows;
         }
         else return;
     }
@@ -294,6 +305,9 @@ void onButtonClick(QWidget* window, QWidget* window2, int odabir) {
                 if (!img.empty()) {
                     putanja = fileInfo.absoluteFilePath();
                     originalnaSlika = img;
+
+                    width = originalnaSlika.cols;
+                    height = originalnaSlika.rows;
                 }
             }
             sveSlike.push_back(originalnaSlika);
@@ -483,17 +497,17 @@ int dajOcjenu(cv::Mat patch){
 
 std::vector<std::vector<int>> kreirajPatch(std::vector<QLineEdit*> textboxes, std::vector<cv::Mat> maske, QWidget* window){
     window->close();
-    std::vector<int> dimenzije;
+    //std::vector<int> trenutne_dimenzije;
     cv::Mat p1, p2, p3, p4, p5, p6, p7, p8, p9;
 
-    if(dimenzije.size()==0){
+    if(trenutne_dimenzije.size()==0){
         for (QLineEdit* textbox : textboxes) {
             int vrijednost = textbox->text().toInt();
-            dimenzije.push_back(vrijednost); // Ažurirajte vrijednost u vektoru
+            trenutne_dimenzije.push_back(vrijednost); // Ažurirajte vrijednost u vektoru
         }
     }
     cv::Mat slikaSaPatchevima = slika.clone();
-    int x = dimenzije[0], y = dimenzije[1], sx = dimenzije[2], sy = dimenzije[3];
+    int x = trenutne_dimenzije[0], y = trenutne_dimenzije[1], sx = trenutne_dimenzije[2], sy = trenutne_dimenzije[3];
     for(int i = 0; i<=slikaSaPatchevima.cols - x; i+=sx){
         for(int j = 0; j<=slikaSaPatchevima.rows - y; j+=sy){
             cv::Rect pravougaonik(i, j, x, y);
@@ -646,7 +660,7 @@ void exportJson(std::vector<std::vector<cv::Mat>>& slike, std::vector<QString> n
         QJsonDocument jsonDoc(root);
 
         // Određujemo putanju do fajla koristeći patchesRootDirectory
-        QString jsonFilePath = patchesRootDirectory + "/output.json";
+        QString jsonFilePath = patchesRootDirectory + "/json_output.json";
         // Zapišemo JSON dokument u fajl
         QFile file(jsonFilePath);
         if (file.open(QIODevice::WriteOnly)) {
@@ -770,7 +784,44 @@ void exportJson(std::vector<std::vector<cv::Mat>>& slike, std::vector<QString> n
     }
 }
 
-void eksportujPojedinePatcheve(QWidget* window6, QCheckBox* checkBoxDa, QCheckBox* checkBoxNe, QCheckBox* checkBoxKolektivni){
+void saveYoloFormat(QCheckBox* Da) {
+    if(Da && Da->isChecked()){
+        std::ofstream file(patchesRootDirectory.toStdString() + "/yolo_output.txt", std::ios::app);
+        // Normalizacija dimenzija
+        for(int i=0; i<ocjene_ispravno.size(); i++){
+            double x_center = (koordinate[i][0] + static_cast<double>(trenutne_dimenzije[0]) / 2) / width;
+            double y_center = (koordinate[i][1] + static_cast<double>(trenutne_dimenzije[1]) / 2) / height;
+            double normalized_width = static_cast<double>(trenutne_dimenzije[0]) / width;
+            double normalized_height = static_cast<double>(trenutne_dimenzije[1]) / height;
+
+            // Otvoriti datoteku za pisanje
+            if (!file.is_open()) {
+                std::cerr << "Error: Could not open the output file!" << std::endl;
+                return;
+            }
+
+            int klasa = 7; //ovo je oznaka da nema defekta na patchu
+            if(ocjene_ispravno[i]!=2){
+                // Spremanje informacija u YOLO formatu
+
+                if(ocjene_d1[i] != 0) klasa = 0;
+                else if (ocjene_d2[i]!=0) klasa = 1;
+                else if (ocjene_d3[i]!=0) klasa  = 2;
+                else if (ocjene_d4[i]!=0) klasa = 3;
+                else if (ocjene_d5[i]!=0) klasa = 4;
+                else if (ocjene_rub[i]!=0) klasa = 5;
+                else if (ocjene_podloga[i]!=0) klasa = 6;
+            }
+
+            file << klasa << " " << x_center << " " << y_center << " "
+                 << normalized_width << " " << normalized_height << std::endl;
+        }
+
+        file.close();
+    }
+}
+
+void eksportujPojedinePatcheve(QWidget* window6, QCheckBox* checkBoxDa, QCheckBox* checkBoxNe, QCheckBox* checkBoxKolektivni, QCheckBox* checkBoxYolo){
     std::vector<std::vector<int>> trazene_ocjene(9, std::vector<int>(3, 3)), ocjene;
     for (int i=0; i<9; i++){
         for (int j=0; j<3; j++){
@@ -854,6 +905,7 @@ void eksportujPojedinePatcheve(QWidget* window6, QCheckBox* checkBoxDa, QCheckBo
 
         spasiPatcheve(spaseni, window6, nazivi);
         exportJson(slikeJson, nazivi, checkBoxDa, ocjene, checkBoxKolektivni);
+        saveYoloFormat(checkBoxYolo);
     }
     spasi.clear();
 }
@@ -874,8 +926,6 @@ void updateUI(QToolButton *markerButton1, QToolButton *markerButton2, QToolButto
         textboxes[i]->setText(QString::number(dimenzije[i]));
     }
 }
-
-
 
 int main(int argc, char *argv[]) {
 
@@ -1230,6 +1280,7 @@ int main(int argc, char *argv[]) {
         spasi.clear();
         dimenzije.clear();
         indeksi.clear();
+        trenutne_dimenzije.clear();
         sveSlike.clear();
         sveSlike.push_back(originalnaSlika);
         maske = kreirajMaske();
@@ -1346,7 +1397,7 @@ int main(int argc, char *argv[]) {
         checkBoxDa = new QCheckBox("Yes", widget);
         checkBoxNe = new QCheckBox("No", widget);
 
-        checkBoxDa->setChecked(true);
+        checkBoxNe->setChecked(true);
 
         QObject::connect(checkBoxDa, &QCheckBox::toggled, [checkBoxNe](bool checked){
             if (checked) {
@@ -1412,6 +1463,47 @@ int main(int argc, char *argv[]) {
     // Pozovite funkciju
     dodajEksportJsonCheckBox();
 
+    QCheckBox *checkBoxDaYolo = nullptr;
+    QCheckBox *checkBoxNeYolo = nullptr;
+
+    auto dodajEksportYoloCheckBox = [&]() {
+        QHBoxLayout *layout = new QHBoxLayout;
+        QWidget *widget = new QWidget(&mainWindow); // Kontejner za checkbox i tekst
+        QVBoxLayout *innerLayout = new QVBoxLayout(widget); // Layout unutar kontejnera
+
+        QLabel *label = new QLabel("YOLO export:", widget);
+        label->setAlignment(Qt::AlignLeft);
+        innerLayout->addWidget(label);
+
+        QHBoxLayout *checkboxLayout = new QHBoxLayout;
+        checkBoxDaYolo = new QCheckBox("Yes", widget);
+        checkBoxNeYolo = new QCheckBox("No", widget);
+
+        checkBoxNeYolo->setChecked(true);
+
+        QObject::connect(checkBoxDaYolo, &QCheckBox::toggled, [checkBoxNeYolo](bool checked){
+            if (checked) {
+                checkBoxNeYolo->setChecked(false);
+            }
+        });
+
+        QObject::connect(checkBoxNeYolo, &QCheckBox::toggled, [checkBoxDaYolo](bool checked){
+            if (checked) {
+                checkBoxDaYolo->setChecked(false);
+            }
+        });
+
+        checkboxLayout->addWidget(checkBoxDaYolo);
+        checkboxLayout->addWidget(checkBoxNeYolo);
+
+        innerLayout->addLayout(checkboxLayout);
+        layout->addWidget(widget);
+        layout_odabir_eksporta->addLayout(layout);
+    };
+
+    // Pozovite funkciju
+    dodajEksportYoloCheckBox();
+
     QObject::connect(patcheviExport, &QPushButton::clicked, [&]() {
        chooseExpWindow.show();
     });
@@ -1437,6 +1529,7 @@ int main(int argc, char *argv[]) {
             std::vector<std::vector<int>> ocjene = {ocjene_d1, ocjene_d2, ocjene_d3, ocjene_d4, ocjene_d5, ocjene_rub, ocjene_podloga, ocjene_ispravno, ocjene_koza};
             spasiPatcheve(spasi, &chooseExpWindow, nazivi);
             exportJson(slikeJson, nazivi, checkBoxDa, ocjene, checkBoxKolektivni);
+            saveYoloFormat(checkBoxDaYolo);
 
         }
         chooseExpWindow.close();
@@ -1488,7 +1581,7 @@ int main(int argc, char *argv[]) {
     }
 
     QObject::connect(eksport, &QPushButton::clicked, [&]() {
-        eksportujPojedinePatcheve(&gradesWindow, checkBoxDa, checkBoxNe, checkBoxKolektivni);
+        eksportujPojedinePatcheve(&gradesWindow, checkBoxDa, checkBoxNe, checkBoxKolektivni, checkBoxDaYolo);
         gradesWindow.close();
         chooseExpWindow.close();
     });
