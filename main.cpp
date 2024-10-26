@@ -784,11 +784,12 @@ void exportJson(std::vector<std::vector<cv::Mat>>& slike, std::vector<QString> n
     }
 }
 
-void saveYoloFormat(QCheckBox* Da) {
+void saveYoloFormat(QCheckBox* Da, std::vector<int> o1 = ocjene_d1, std::vector<int> o2 = ocjene_d2, std::vector<int> o3 = ocjene_d3,
+                    std::vector<int> o4 = ocjene_d4, std::vector<int> o5 = ocjene_d5, std::vector<int> oR = ocjene_rub,
+                    std::vector<int> op = ocjene_podloga, std::vector<int> oi = ocjene_ispravno) {
     if(Da && Da->isChecked()){
         std::ofstream file(patchesRootDirectory.toStdString() + "/yolo_output.txt", std::ios::app);
-        // Normalizacija dimenzija
-        for(int i=0; i<ocjene_ispravno.size(); i++){
+        for(int i=0; i<oi.size(); i++){
             double x_center = (koordinate[i][0] + static_cast<double>(trenutne_dimenzije[0]) / 2) / width;
             double y_center = (koordinate[i][1] + static_cast<double>(trenutne_dimenzije[1]) / 2) / height;
             double normalized_width = static_cast<double>(trenutne_dimenzije[0]) / width;
@@ -801,16 +802,16 @@ void saveYoloFormat(QCheckBox* Da) {
             }
 
             int klasa = 7; //ovo je oznaka da nema defekta na patchu
-            if(ocjene_ispravno[i]!=2){
+            if(oi[i]!=2){
                 // Spremanje informacija u YOLO formatu
 
-                if(ocjene_d1[i] != 0) klasa = 0;
-                else if (ocjene_d2[i]!=0) klasa = 1;
-                else if (ocjene_d3[i]!=0) klasa  = 2;
-                else if (ocjene_d4[i]!=0) klasa = 3;
-                else if (ocjene_d5[i]!=0) klasa = 4;
-                else if (ocjene_rub[i]!=0) klasa = 5;
-                else if (ocjene_podloga[i]!=0) klasa = 6;
+                if(o1[i] != 0) klasa = 0;
+                else if (o2[i]!=0) klasa = 1;
+                else if (o3[i]!=0) klasa  = 2;
+                else if (o4[i]!=0) klasa = 3;
+                else if (o5[i]!=0) klasa = 4;
+                else if (oR[i]!=0) klasa = 5;
+                else if (op[i]!=0) klasa = 6;
             }
 
             file << klasa << " " << x_center << " " << y_center << " "
@@ -905,7 +906,8 @@ void eksportujPojedinePatcheve(QWidget* window6, QCheckBox* checkBoxDa, QCheckBo
 
         spasiPatcheve(spaseni, window6, nazivi);
         exportJson(slikeJson, nazivi, checkBoxDa, ocjene, checkBoxKolektivni);
-        saveYoloFormat(checkBoxYolo);
+        saveYoloFormat(checkBoxYolo, spasenaOcjenaD1, spasenaOcjenaD2, spasenaOcjenaD3, spasenaOcjenaD4, spasenaOcjenaD5, spasenaOcjenaRub, spasenaOcjenaPodloga,
+                       spasenaOcjenaIspravno);
     }
     spasi.clear();
 }
