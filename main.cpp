@@ -31,7 +31,6 @@
 #include <QObject>
 #include <QEvent>
 #include <fstream>
-#include <filesystem>
 
 //globalne varijable koje se koriste u nekoliko funkcija, deklarisane ovako radi lakše manipulacije između funkcija
 cv::Mat slika, originalnaSlika;
@@ -784,7 +783,7 @@ void exportJson(std::vector<std::vector<cv::Mat>>& slike, std::vector<QString> n
     }
 }
 
-void saveYoloFormat(QCheckBox* Da, std::vector<int> o1 = ocjene_d1, std::vector<int> o2 = ocjene_d2, std::vector<int> o3 = ocjene_d3,
+void exportYolo(QCheckBox* Da, std::vector<int> o1 = ocjene_d1, std::vector<int> o2 = ocjene_d2, std::vector<int> o3 = ocjene_d3,
                     std::vector<int> o4 = ocjene_d4, std::vector<int> o5 = ocjene_d5, std::vector<int> oR = ocjene_rub,
                     std::vector<int> op = ocjene_podloga, std::vector<int> oi = ocjene_ispravno) {
     if(Da && Da->isChecked()){
@@ -822,7 +821,63 @@ void saveYoloFormat(QCheckBox* Da, std::vector<int> o1 = ocjene_d1, std::vector<
     }
 }
 
-void eksportujPojedinePatcheve(QWidget* window6, QCheckBox* checkBoxDa, QCheckBox* checkBoxNe, QCheckBox* checkBoxKolektivni, QCheckBox* checkBoxYolo){
+void exportPascalVOC(QCheckBox* Da, std::vector<int> o1 = ocjene_d1, std::vector<int> o2 = ocjene_d2, std::vector<int> o3 = ocjene_d3,
+                     std::vector<int> o4 = ocjene_d4, std::vector<int> o5 = ocjene_d5, std::vector<int> oR = ocjene_rub,
+                     std::vector<int> op = ocjene_podloga, std::vector<int> oi = ocjene_ispravno) {
+
+    if(Da && Da->isChecked()){
+        std::ofstream file(patchesRootDirectory.toStdString() + "/Pascal_output.xml");
+
+        if (!file.is_open()) {
+            std::cerr << "Error: Could not open file for writing.\n";
+            return;
+        }
+
+        file << "<annotation>\n";
+        file << "    <filename>" << imeSlike.toStdString() << "</filename>\n";
+        file << "    <path>" << putanja.toStdString() << "</path>\n";
+        file << "    <size>\n";
+        file << "        <width>" << width << "</width>\n";
+        file << "        <height>" << height << "</height>\n";
+        file << "    </size>\n";
+
+        for (int i = 0; i<oi.size(); i++) {
+            std::string patchName = " " + QString("Patch%1").arg(QString::number(i + 1).rightJustified(4, '0')).toStdString();
+            std::string objectName = naziviUAplikaciji[8].toStdString() + patchName;
+
+            if(oi[i]!=2){
+                // Spremanje informacija u YOLO formatu
+
+                if(o1[i] != 0) objectName = naziviUAplikaciji[0].toStdString();
+                else if (o2[i]!=0) objectName = naziviUAplikaciji[1].toStdString() + patchName;
+                else if (o3[i]!=0) objectName = naziviUAplikaciji[2].toStdString() + patchName;
+                else if (o4[i]!=0) objectName = naziviUAplikaciji[3].toStdString() + patchName;
+                else if (o5[i]!=0) objectName = naziviUAplikaciji[4].toStdString() + patchName;
+                else if (oR[i]!=0) objectName = naziviUAplikaciji[6].toStdString() + patchName;
+                else if (op[i]!=0) objectName = naziviUAplikaciji[7].toStdString() + patchName;
+            }
+            int xmin = koordinate[i][0], ymin = koordinate[i][1],
+                xmax = koordinate[i][0] + trenutne_dimenzije[0], ymax = koordinate[i][1] + trenutne_dimenzije[1];
+
+            file << "    <object>\n";
+            file << "        <name>" << objectName << "</name>\n";
+            file << "        <bndbox>\n";
+            file << "            <xmin>" << xmin << "</xmin>\n";
+            file << "            <ymin>" << ymin << "</ymin>\n";
+            file << "            <xmax>" << xmax << "</xmax>\n";
+            file << "            <ymax>" << ymax << "</ymax>\n";
+            file << "        </bndbox>\n";
+            file << "    </object>\n";
+        }
+
+        file << "</annotation>\n";
+        file.close();
+        std::cout << "Pascal VOC XML exported as " << imeSlike.toStdString() << ".xml\n";
+    }
+}
+
+void eksportujPojedinePatcheve(QWidget* window6, QCheckBox* checkBoxDa, QCheckBox* checkBoxNe, QCheckBox* checkBoxKolektivni,
+                               QCheckBox* checkBoxYolo, QCheckBox* checkBoxPascal){
     std::vector<std::vector<int>> trazene_ocjene(9, std::vector<int>(3, 3)), ocjene;
     for (int i=0; i<9; i++){
         for (int j=0; j<3; j++){
@@ -906,8 +961,10 @@ void eksportujPojedinePatcheve(QWidget* window6, QCheckBox* checkBoxDa, QCheckBo
 
         spasiPatcheve(spaseni, window6, nazivi);
         exportJson(slikeJson, nazivi, checkBoxDa, ocjene, checkBoxKolektivni);
-        saveYoloFormat(checkBoxYolo, spasenaOcjenaD1, spasenaOcjenaD2, spasenaOcjenaD3, spasenaOcjenaD4, spasenaOcjenaD5, spasenaOcjenaRub, spasenaOcjenaPodloga,
+        exportYolo(checkBoxYolo, spasenaOcjenaD1, spasenaOcjenaD2, spasenaOcjenaD3, spasenaOcjenaD4, spasenaOcjenaD5, spasenaOcjenaRub, spasenaOcjenaPodloga,
                        spasenaOcjenaIspravno);
+        exportPascalVOC(checkBoxPascal, spasenaOcjenaD1, spasenaOcjenaD2, spasenaOcjenaD3, spasenaOcjenaD4, spasenaOcjenaD5, spasenaOcjenaRub, spasenaOcjenaPodloga,
+                        spasenaOcjenaIspravno);
     }
     spasi.clear();
 }
@@ -1506,6 +1563,47 @@ int main(int argc, char *argv[]) {
     // Pozovite funkciju
     dodajEksportYoloCheckBox();
 
+    QCheckBox *checkBoxDaPascal = nullptr;
+    QCheckBox *checkBoxNePascal = nullptr;
+
+    auto dodajEksportPascalCheckBox = [&]() {
+        QHBoxLayout *layout = new QHBoxLayout;
+        QWidget *widget = new QWidget(&mainWindow); // Kontejner za checkbox i tekst
+        QVBoxLayout *innerLayout = new QVBoxLayout(widget); // Layout unutar kontejnera
+
+        QLabel *label = new QLabel("Pascal VOC export:", widget);
+        label->setAlignment(Qt::AlignLeft);
+        innerLayout->addWidget(label);
+
+        QHBoxLayout *checkboxLayout = new QHBoxLayout;
+        checkBoxDaPascal = new QCheckBox("Yes", widget);
+        checkBoxNePascal = new QCheckBox("No", widget);
+
+        checkBoxNePascal->setChecked(true);
+
+        QObject::connect(checkBoxDaPascal, &QCheckBox::toggled, [checkBoxNePascal](bool checked){
+            if (checked) {
+                checkBoxNePascal->setChecked(false);
+            }
+        });
+
+        QObject::connect(checkBoxNePascal, &QCheckBox::toggled, [checkBoxDaPascal](bool checked){
+            if (checked) {
+                checkBoxDaPascal->setChecked(false);
+            }
+        });
+
+        checkboxLayout->addWidget(checkBoxDaPascal);
+        checkboxLayout->addWidget(checkBoxNePascal);
+
+        innerLayout->addLayout(checkboxLayout);
+        layout->addWidget(widget);
+        layout_odabir_eksporta->addLayout(layout);
+    };
+
+    // Pozovite funkciju
+    dodajEksportPascalCheckBox();
+
     QObject::connect(patcheviExport, &QPushButton::clicked, [&]() {
        chooseExpWindow.show();
     });
@@ -1531,7 +1629,8 @@ int main(int argc, char *argv[]) {
             std::vector<std::vector<int>> ocjene = {ocjene_d1, ocjene_d2, ocjene_d3, ocjene_d4, ocjene_d5, ocjene_rub, ocjene_podloga, ocjene_ispravno, ocjene_koza};
             spasiPatcheve(spasi, &chooseExpWindow, nazivi);
             exportJson(slikeJson, nazivi, checkBoxDa, ocjene, checkBoxKolektivni);
-            saveYoloFormat(checkBoxDaYolo);
+            exportYolo(checkBoxDaYolo);
+            exportPascalVOC(checkBoxDaPascal);
 
         }
         chooseExpWindow.close();
@@ -1583,7 +1682,7 @@ int main(int argc, char *argv[]) {
     }
 
     QObject::connect(eksport, &QPushButton::clicked, [&]() {
-        eksportujPojedinePatcheve(&gradesWindow, checkBoxDa, checkBoxNe, checkBoxKolektivni, checkBoxDaYolo);
+        eksportujPojedinePatcheve(&gradesWindow, checkBoxDa, checkBoxNe, checkBoxKolektivni, checkBoxDaYolo, checkBoxDaPascal);
         gradesWindow.close();
         chooseExpWindow.close();
     });
