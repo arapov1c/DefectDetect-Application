@@ -80,8 +80,6 @@ Each collective JSON file includes:
 ## 🧠 Improvements Planned
 
 - [ ] Support for rectangle/circle annotations
-- [ ] Multi-image annotation sessions
-- [ ] Export to COCO or Pascal VOC
 - [ ] GUI enhancements & internationalization
 
 ---
