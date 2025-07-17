@@ -21,8 +21,9 @@ Key features:
 
 ```
 DefectDetect-Application/
-├── qt_runtime/                  # Application source code
 ├── data/                 # Input test images
+├── notebooks/            # Jupyter analysis/evaluation
+├── qt_runtime/           # Application source code
 ├── README.md             # Project description
 └── .gitignore
 ```
