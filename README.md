@@ -21,11 +21,8 @@ Key features:
 
 ```
 DefectDetect-Application/
-├── src/                  # Application source code
-├── models/               # (Optional) trained ML models
+├── qt_runtime/                  # Application source code
 ├── data/                 # Input test images
-├── notebooks/            # Jupyter analysis/evaluation
-├── requirements.txt      # Dependencies
 ├── README.md             # Project description
 └── .gitignore
 ```
@@ -41,16 +38,6 @@ The application does **not require installation** or dependency setup.
 3. Unzip and run the executable file directly.
 
 ✅ That’s it — no Python, no installation, just run and annotate!
-
----
-
-## 🖼️ Application Screenshots (Optional)
-> Add `img/` folder with screenshots like:
-- Main Window
-- Annotation Toolbars
-- Patch creation dialog
-- JSON Export selection
-- JSON structure visualization
 
 ---
 
