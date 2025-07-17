@@ -1,4 +1,4 @@
-# 🧠 DefectDetect-Application
+# 🖌️ DefectDetect-Application
 
 **A lightweight tool for defect annotation and patch generation**, originally developed for defect marking on leather surfaces, but easily adaptable for general image annotation needs.
 
@@ -6,7 +6,7 @@
 
 ---
 
-## 📷 Overview
+## 🔎 Overview
 
 **DefectDetect** enables manual image annotation via freehand drawing, the creation of smaller image segments called **patches**, and flexible export of annotation data in structured JSON format.
 
