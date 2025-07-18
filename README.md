@@ -61,7 +61,7 @@ Each collective JSON file includes:
 - `ratings`: meaning of each rating
 - `org_patches`: position & size of patches
 
-> For code examples on parsing and using the JSON files in Python (e.g. in Colab), see `notebooks/json_demo.ipynb`.
+> For code examples on parsing and using the JSON files in Python (e.g. in Colab), see `notebooks/DefectDetect_JSON_Examples.ipynb`.
 
 ---
 
