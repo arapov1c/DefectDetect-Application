@@ -57,8 +57,8 @@ The application does **not require installation** or dependency setup.
 
 For detailed instructions:
 
-- 🪟 [Windows usage guide](instructions/README_windows.md)
-- 🐧 [Linux usage guide](instructions/README_linux.md)
+- 🪟 [Windows usage guide](instructions/_README_WINDOWS_v4.2.1.txt)
+- 🐧 [Linux usage guide](instructions/_README_LINUX_v4.2.1.txt)
 
 ---
 
