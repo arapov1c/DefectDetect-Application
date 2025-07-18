@@ -22,6 +22,7 @@ Key features:
 ```
 DefectDetect-Application/
 ├── data/                 # Input test images
+├── instructions/         # Detailed instructions on how to use the app
 ├── notebooks/            # Jupyter analysis/evaluation
 ├── qt_runtime/           # Application source code
 ├── README.md             # Project description
