@@ -2,7 +2,7 @@
 
 **A lightweight tool for annotation and patch generation**, originally developed for defect marking on leather surfaces, but easily adaptable for general image annotation needs.
 
-> 📌 *Developed as part of a university project at the Faculty of Electrical Engineering, University of Sarajevo (2025).*
+> 📌 *This work was partially supported by the Federal Ministry of Science and Education of Bosnia and Herzegovina under the project "Automated Visual Inspection Based on Deep Neural Networks" in 2023/2024, at Faculty of Electrical Engineering, University of Sarajevo.*
 
 ---
 
@@ -76,7 +76,7 @@ Each collective JSON file includes:
 
 If you use this tool in your research or publications, please cite:
 
-> **Arapović, L. (2024).** _DefectDetect: Application for Defect Annotation on Leather Surfaces_. University of Sarajevo – Faculty of Electrical Engineering.
+> **Arapović, L. (2024).** _DefectDetect: Application for Defect Annotation on Leather Surfaces_. University of Sarajevo – Faculty of Electrical Engineering. (to be changed)
 
 ---
 
