@@ -32,6 +32,7 @@ DefectDetect-Application/
 
 ## 🚀 How to Use
 
+## 🪟 For Windows App:
 The application does **not require installation** or dependency setup.
 
 1. Go to the [Releases](https://github.com/arapov1c/DefectDetect-Application/releases) section.
@@ -40,7 +41,15 @@ The application does **not require installation** or dependency setup.
 
 ✅ That’s it — no Python, no installation, just run and annotate!
 
----
+## 🐧 For Linux App
+
+1. Go to the [Releases](https://github.com/arapov1c/DefectDetect-Application/releases) section.
+2. Download the latest `DefectDetect-x86_64.AppImage` file (a single-file Linux executable).
+3. Make the file executable and run it:
+
+   ```bash
+   chmod +x DefectDetect-x86_64.AppImage
+   ./DefectDetect-x86_64.AppImage
 
 ## 📦 Export Options
 
