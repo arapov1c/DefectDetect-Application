@@ -51,9 +51,13 @@ The application does **not require installation** or dependency setup.
    ./DefectDetect-x86_64.AppImage
    
 ---
+
 ## 📖 How to Use
 
-For detailed instructions on using the application, refer to the User Manual (PDF).
+For detailed instructions:
+
+- 🪟 [Windows usage guide](instructions/README_windows.md)
+- 🐧 [Linux usage guide](instructions/README_linux.md)
 
 ---
 
