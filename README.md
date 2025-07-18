@@ -44,7 +44,7 @@ The application does **not require installation** or dependency setup.
 ## 🐧 For Linux App
 
 1. Go to the [Releases](https://github.com/arapov1c/DefectDetect-Application/releases) section.
-2. Download the latest `DefectDetect-x86_64.AppImage` file (a single-file Linux executable).
+2. Download the latest '.zip' package for Linux where you can find `DefectDetect-x86_64.AppImage` file (a single-file Linux executable).
 3. Make the file executable and run it:
 
    ```bash
